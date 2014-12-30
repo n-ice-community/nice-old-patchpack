@@ -1,0 +1,168 @@
+diff -r fb7b140f2b8e src/company_cmd.cpp
+--- a/src/company_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/company_cmd.cpp	Mon Dec 29 00:24:14 2014 +0000
+@@ -575,7 +575,9 @@
+ 
+ 	AI::BroadcastNewEvent(new ScriptEventCompanyNew(c->index), c->index);
+ 	Game::NewEvent(new ScriptEventCompanyNew(c->index));
+-
++	
++	if (!is_ai) UpdateAllTownVirtCoords();
++	
+ 	return c;
+ }
+ 
+diff -r fb7b140f2b8e src/lang/english.txt
+--- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/lang/english.txt	Mon Dec 29 00:24:14 2014 +0000
+@@ -1287,7 +1287,7 @@
+ STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Delay before tooltips are displayed when hovering the mouse over some interface element. Alternatively tooltips are bound to the right mouse button when this value is set to 0.
+ STR_CONFIG_SETTING_HOVER_DELAY_VALUE                            :Hover for {COMMA} millisecond{P 0 "" s}
+ STR_CONFIG_SETTING_HOVER_DELAY_DISABLED                         :Right click
+-STR_CONFIG_SETTING_POPULATION_IN_LABEL                          :Show town population in the town name label: {STRING2}
++STR_CONFIG_SETTING_POPULATION_IN_LABEL                          :Show extra information in the town name label: {STRING2}
+ STR_CONFIG_SETTING_POPULATION_IN_LABEL_HELPTEXT                 :Display the population of towns in their label on the map
+ STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS                         :Thickness of lines in graphs: {STRING2}
+ STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS_HELPTEXT                :Width of the line in the graphs. A thin line is more precisely readable, a thicker line is easier to see and colours are easier to distinguish
+@@ -4879,10 +4879,18 @@
+ STR_SAVEGAME_NAME_SPECTATOR                                     :Spectator, {1:STRING1}
+ 
+ # Viewport strings
++STR_VIEWPORT_TOWN_POP_VERY_POOR_RATING                          :{WHITE}{TOWN} {RED}({COMMA})
++STR_VIEWPORT_TOWN_POP_MEDIOCRE_RATING                           :{WHITE}{TOWN} {ORANGE}({COMMA})
++STR_VIEWPORT_TOWN_POP_GOOD_RATING                               :{WHITE}{TOWN} {YELLOW}({COMMA})
+ STR_VIEWPORT_TOWN_POP                                           :{WHITE}{TOWN} ({COMMA})
++STR_VIEWPORT_TOWN_POP_EXCELLENT_RATING                          :{WHITE}{TOWN} {GREEN}({COMMA})
+ STR_VIEWPORT_TOWN                                               :{WHITE}{TOWN}
+ STR_VIEWPORT_TOWN_TINY_BLACK                                    :{TINY_FONT}{BLACK}{TOWN}
+ STR_VIEWPORT_TOWN_TINY_WHITE                                    :{TINY_FONT}{WHITE}{TOWN}
++STR_VIEWPORT_TOWN_TINY_VERY_POOR_RATING                         :{TINY_FONT}{RED}{TOWN}
++STR_VIEWPORT_TOWN_TINY_MEDIOCRE_RATING                          :{TINY_FONT}{ORANGE}{TOWN}
++STR_VIEWPORT_TOWN_TINY_GOOD_RATING                              :{TINY_FONT}{YELLOW}{TOWN}
++STR_VIEWPORT_TOWN_TINY_EXCELLENT_RATING                         :{TINY_FONT}{GREEN}{TOWN}
+ 
+ STR_VIEWPORT_SIGN_SMALL_BLACK                                   :{TINY_FONT}{BLACK}{SIGN}
+ STR_VIEWPORT_SIGN_SMALL_WHITE                                   :{TINY_FONT}{WHITE}{SIGN}
+diff -r fb7b140f2b8e src/town.h
+--- a/src/town.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/town.h	Mon Dec 29 00:24:14 2014 +0000
+@@ -75,6 +75,7 @@
+ 	CompanyByte exclusivity;       ///< which company has exclusivity
+ 	uint8 exclusive_counter;       ///< months till the exclusivity expires
+ 	int16 ratings[MAX_COMPANIES];  ///< ratings of each company for this town
++	StringID town_label;           ///< Label dependent on _local_company rating.
+ 
+ 	TransportedCargoStat<uint32> supplied[NUM_CARGO]; ///< Cargo statistics about supplied cargo.
+ 	TransportedCargoStat<uint16> received[NUM_TE];    ///< Cargo statistics about received cargotypes.
+@@ -113,6 +114,31 @@
+ 
+ 	void InitializeLayout(TownLayout layout);
+ 
++	void UpdateLabel();
++
++	/**
++	 * Returns the correct town label, based on rating.
++	 */
++	inline StringID Label() const{
++		if (!(_game_mode == GM_EDITOR) && (_local_company < MAX_COMPANIES)) {
++			return STR_VIEWPORT_TOWN_POP_VERY_POOR_RATING + this->town_label;
++		} else {
++			return _settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN;
++		}
++	}
++
++	/**
++	 * Returns the correct town small label, based on rating.
++	 */
++	inline StringID SmallLabel() const{
++		if (!(_game_mode == GM_EDITOR) && (_local_company < MAX_COMPANIES)) {
++			return STR_VIEWPORT_TOWN_TINY_VERY_POOR_RATING + this->town_label;
++		} else {
++			return STR_VIEWPORT_TOWN_TINY_WHITE;
++		}
++	}
++
++
+ 	/**
+ 	 * Calculate the max town noise.
+ 	 * The value is counted using the population divided by the content of the
+diff -r fb7b140f2b8e src/town_cmd.cpp
+--- a/src/town_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/town_cmd.cpp	Mon Dec 29 00:24:14 2014 +0000
+@@ -137,6 +137,26 @@
+ 
+ 	this->layout = TileHash(TileX(this->xy), TileY(this->xy)) % (NUM_TLS - 1);
+ }
++/**
++ * Updates the town label of the town after changes in rating. The colour scheme is:
++ * Red: Appalling and Very poor ratings.
++ * Orange: Poor and mediocre ratings.
++ * Yellow: Good rating.
++ * White: Very good rating (standard).
++ * Green: Excellent and outstanding ratings.
++ */
++void Town::UpdateLabel()
++{
++	if (!(_game_mode == GM_EDITOR) && (_local_company < MAX_COMPANIES)) {
++		int r = this->ratings[_local_company];
++		(this->town_label = 0, r <= RATING_VERYPOOR)  || // Appalling and Very Poor
++		(this->town_label++,   r <= RATING_MEDIOCRE)  || // Poor and Mediocre
++		(this->town_label++,   r <= RATING_GOOD)      || // Good
++		(this->town_label++,   r <= RATING_VERYGOOD)  || // Very Good
++		(this->town_label++,   true);                    // Excellent and Outstanding
++	}
++}
++
+ 
+ /**
+  * Return a random valid town.
+@@ -373,11 +393,11 @@
+  */
+ void Town::UpdateVirtCoord()
+ {
++	this->UpdateLabel();
+ 	Point pt = RemapCoords2(TileX(this->xy) * TILE_SIZE, TileY(this->xy) * TILE_SIZE);
+ 	SetDParam(0, this->index);
+ 	SetDParam(1, this->cache.population);
+-	this->cache.sign.UpdatePosition(pt.x, pt.y - 24 * ZOOM_LVL_BASE,
+-		_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN);
++	this->cache.sign.UpdatePosition(pt.x, pt.y - 24 * ZOOM_LVL_BASE, this->Label());
+ 
+ 	SetWindowDirty(WC_TOWN_VIEW, this->index);
+ }
+@@ -2913,6 +2933,7 @@
+ 			 */
+ 			if (t->ratings[_current_company] > RATING_BRIBE_DOWN_TO) {
+ 				t->ratings[_current_company] = RATING_BRIBE_DOWN_TO;
++				t->UpdateVirtCoord();
+ 				SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
+ 			}
+ 		} else {
+@@ -3044,7 +3065,7 @@
+ 	for (uint i = 0; i < MAX_COMPANIES; i++) {
+ 		t->ratings[i] = Clamp(t->ratings[i], RATING_MINIMUM, RATING_MAXIMUM);
+ 	}
+-
++	t->UpdateVirtCoord();
+ 	SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
+ }
+ 
+@@ -3298,6 +3319,7 @@
+ 	} else {
+ 		SetBit(t->have_ratings, _current_company);
+ 		t->ratings[_current_company] = rating;
++		t->UpdateVirtCoord();
+ 		SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
+ 	}
+ }
+diff -r fb7b140f2b8e src/viewport.cpp
+--- a/src/viewport.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/viewport.cpp	Mon Dec 29 00:24:14 2014 +0000
+@@ -1589,6 +1589,7 @@
+ 		ViewportAddString(dpi, ZOOM_LVL_OUT_16X, &t->cache.sign,
+ 				_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
+ 				STR_VIEWPORT_TOWN_TINY_WHITE, STR_VIEWPORT_TOWN_TINY_BLACK,
++				t->Label(), t->SmallLabel(), STR_VIEWPORT_TOWN_TINY_BLACK,
+ 				t->index, t->cache.population);
+ 	}
+ }

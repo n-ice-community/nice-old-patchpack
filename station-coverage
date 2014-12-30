@@ -1,0 +1,739 @@
+# HG changeset patch
+# Parent fb7b140f2b8ea48eebea7915b57a57e5143680c4
+
+diff -r fb7b140f2b8e source.list
+--- a/source.list	Sat Dec 27 17:45:27 2014 +0000
++++ b/source.list	Mon Dec 29 00:02:42 2014 +0000
+@@ -295,6 +295,8 @@
+ order_base.h
+ order_func.h
+ order_type.h
++overlay.h
++overlay_cmd.h
+ pbs.h
+ progress.h
+ querystring_gui.h
+@@ -574,6 +576,7 @@
+ misc_cmd.cpp
+ object_cmd.cpp
+ order_cmd.cpp
++overlay_cmd.cpp
+ rail_cmd.cpp
+ road_cmd.cpp
+ roadveh_cmd.cpp
+diff -r fb7b140f2b8e src/clear_cmd.cpp
+--- a/src/clear_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/clear_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -126,6 +126,7 @@
+ 			break;
+ 	}
+ 
++	DrawOverlay(ti, MP_CLEAR);
+ 	DrawBridgeMiddle(ti);
+ }
+ 
+diff -r fb7b140f2b8e src/industry_cmd.cpp
+--- a/src/industry_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/industry_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -343,6 +343,8 @@
+ 		DrawGroundSprite(image, GroundSpritePaletteTransform(image, dits->ground.pal, GENERAL_SPRITE_COLOUR(ind->random_colour)));
+ 	}
+ 
++	DrawOverlay(ti, MP_INDUSTRY);
++
+ 	/* If industries are transparent and invisible, do not draw the upper part */
+ 	if (IsInvisibilitySet(TO_INDUSTRIES)) return;
+ 
+diff -r fb7b140f2b8e src/lang/english.txt
+--- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/lang/english.txt	Mon Dec 29 00:02:42 2014 +0000
+@@ -232,6 +232,7 @@
+ STR_TOOLTIP_SORT_ORDER                                          :{BLACK}Select sorting order (descending/ascending)
+ STR_TOOLTIP_SORT_CRITERIA                                       :{BLACK}Select sorting criteria
+ STR_TOOLTIP_FILTER_CRITERIA                                     :{BLACK}Select filtering criteria
++STR_BUTTON_COVERAGE                                             :{BLACK}Coverage
+ STR_BUTTON_SORT_BY                                              :{BLACK}Sort by
+ STR_BUTTON_LOCATION                                             :{BLACK}Location
+ STR_BUTTON_RENAME                                               :{BLACK}Rename
+@@ -3159,6 +3160,8 @@
+ STR_STATION_VIEW_CENTER_TOOLTIP                                 :{BLACK}Centre main view on station location. Ctrl+Click opens a new viewport on station location
+ STR_STATION_VIEW_RENAME_TOOLTIP                                 :{BLACK}Change name of station
+ 
++STR_STATION_VIEW_COVERAGE                                       :{BLACK}Coverage
++STR_STATION_VIEW_COVERAGE_TIP                                   :{BLACK}Show station's area coverage
+ STR_STATION_VIEW_SCHEDULED_TRAINS_TOOLTIP                       :{BLACK}Show all trains which have this station on their schedule
+ STR_STATION_VIEW_SCHEDULED_ROAD_VEHICLES_TOOLTIP                :{BLACK}Show all road vehicles which have this station on their schedule
+ STR_STATION_VIEW_SCHEDULED_AIRCRAFT_TOOLTIP                     :{BLACK}Show all aircraft which have this station on their schedule
+diff -r fb7b140f2b8e src/newgrf_house.cpp
+--- a/src/newgrf_house.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/newgrf_house.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -469,6 +469,8 @@
+ 		DrawGroundSprite(image, GroundSpritePaletteTransform(image, pal, palette));
+ 	}
+ 
++	DrawOverlay(ti, MP_HOUSE);
++
+ 	DrawNewGRFTileSeq(ti, dts, TO_HOUSES, stage, palette);
+ }
+ 
+diff -r fb7b140f2b8e src/newgrf_industrytiles.cpp
+--- a/src/newgrf_industrytiles.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/newgrf_industrytiles.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -184,6 +184,8 @@
+ 		}
+ 	}
+ 
++	DrawOverlay(ti, MP_INDUSTRY);
++
+ 	DrawNewGRFTileSeq(ti, dts, TO_INDUSTRIES, stage, GENERAL_SPRITE_COLOUR(rnd_colour));
+ }
+ 
+diff -r fb7b140f2b8e src/rail_cmd.cpp
+--- a/src/rail_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/rail_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -2354,6 +2354,8 @@
+ 
+ 		if (HasBit(_display_opt, DO_FULL_DETAIL)) DrawTrackDetails(ti, rti);
+ 
++		DrawOverlay(ti, MP_RAILWAY);
++
+ 		if (HasCatenaryDrawn(GetRailType(ti->tile))) DrawCatenary(ti);
+ 
+ 		if (HasSignals(ti->tile)) DrawSignals(ti->tile, rails, rti);
+@@ -2429,6 +2431,8 @@
+ 		int depot_sprite = GetCustomRailSprite(rti, ti->tile, RTSG_DEPOT);
+ 		relocation = depot_sprite != 0 ? depot_sprite - SPR_RAIL_DEPOT_SE_1 : rti->GetRailtypeSpriteOffset();
+ 
++		DrawOverlay(ti, MP_RAILWAY);
++
+ 		if (HasCatenaryDrawn(GetRailType(ti->tile))) DrawCatenary(ti);
+ 
+ 		DrawRailTileSeq(ti, dts, TO_BUILDINGS, relocation, 0, _drawtile_track_palette);
+diff -r fb7b140f2b8e src/road_cmd.cpp
+--- a/src/road_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/road_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -1316,11 +1316,14 @@
+ 	switch (GetRoadTileType(ti->tile)) {
+ 		case ROAD_TILE_NORMAL:
+ 			DrawRoadBits(ti);
++			DrawOverlay(ti, MP_ROAD);
+ 			break;
+ 
+ 		case ROAD_TILE_CROSSING: {
+ 			if (ti->tileh != SLOPE_FLAT) DrawFoundation(ti, FOUNDATION_LEVELED);
+ 
++			DrawOverlay(ti, MP_ROAD);
++
+ 			PaletteID pal = PAL_NONE;
+ 			const RailtypeInfo *rti = GetRailTypeInfo(GetRailType(ti->tile));
+ 
+@@ -1396,6 +1399,7 @@
+ 			}
+ 
+ 			DrawGroundSprite(dts->ground.sprite, PAL_NONE);
++			DrawOverlay(ti, MP_ROAD);
+ 			DrawOrigTileSeq(ti, dts, TO_BUILDINGS, palette);
+ 			break;
+ 		}
+diff -r fb7b140f2b8e src/saveload/afterload.cpp
+--- a/src/saveload/afterload.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/saveload/afterload.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -881,6 +881,9 @@
+ 				if (!Station::IsExpected(bst)) break;
+ 				Station *st = Station::From(bst);
+ 
++				/* Set up station catchment */
++				st->catchment.BeforeAddTile(t, st->GetCatchmentRadius());
++
+ 				switch (GetStationType(t)) {
+ 					case STATION_TRUCK:
+ 					case STATION_BUS:
+diff -r fb7b140f2b8e src/station.cpp
+--- a/src/station.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/station.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -24,6 +24,7 @@
+ #include "roadstop_base.h"
+ #include "industry.h"
+ #include "core/random_func.hpp"
++#include "overlay_cmd.h"
+ #include "linkgraph/linkgraph.h"
+ #include "linkgraph/linkgraphschedule.h"
+ 
+@@ -132,6 +133,10 @@
+ 		InvalidateWindowData(WC_STATION_LIST, this->owner, 0);
+ 	}
+ 
++	if (Overlays::Instance()->HasStation(Station::Get(this->index))) {
++		Overlays::Instance()->ToggleStation(Station::Get(this->index));
++	};
++
+ 	DeleteWindowById(WC_STATION_VIEW, index);
+ 
+ 	/* Now delete all orders that go to the station */
+@@ -147,6 +152,25 @@
+ 	CargoPacket::InvalidateAllFrom(this->index);
+ }
+ 
++/**
++ * Evaluate if a tile is in station catchment area.
++ * @param ti the tile info
++ * @param type the catchment type of the station
++ * @return true/false if the tile is in catchment
++ */
++bool Station::IsTileInCatchmentArea(const TileInfo* ti, CatchmentType type) const
++{
++	switch (type) {
++		case ACCEPTANCE:
++			return this->rect.PtInExtendedRect(TileX(ti->tile),TileY(ti->tile),this->GetCatchmentRadius());
++		case PRODUCTION:
++			return this->catchment.IsTileInCatchment(ti->tile);
++		case INDUSTRY:
++			return false;
++		default:
++			NOT_REACHED();
++	}
++}
+ 
+ /**
+  * Invalidating of the JoinStation window has to be done
+@@ -227,6 +251,23 @@
+ 	}
+ }
+ 
++/**
++ * Marks the acceptance tiles of the station as dirty.
++ *
++ * @ingroup dirty
++ */
++void Station::MarkAcceptanceTilesDirty() const
++{
++	Rect rec = this->GetCatchmentRect();
++	TileIndex top_left = TileXY(rec.left, rec.top);
++	int width = rec.right - rec.left + 1;
++	int height = rec.bottom - rec.top + 1;
++
++	TILE_AREA_LOOP(tile, TileArea(top_left, width, height) ) {
++		MarkTileDirtyByTile(tile);
++	}
++}
++
+ /* virtual */ uint Station::GetPlatformLength(TileIndex tile) const
+ {
+ 	assert(this->TileBelongsToRailStation(tile));
+@@ -568,3 +609,88 @@
+ 	/* 3 bits fraction for the maintenance cost factor. */
+ 	return total_cost >> 3;
+ }
++
++/************************************************************************/
++/*                   StationCatchment implementation                    */
++/************************************************************************/
++
++StationCatchment::StationCatchment()
++{
++}
++
++/**
++ * Determines whether a given point (x, y) is within the station catchment area
++ * @param tile TileIndex to test
++ * @return true if the point is within the station catchment area
++ */
++bool StationCatchment::IsTileInCatchment(TileIndex tile) const
++{
++	return this->catchmentTiles.find(tile) != this->catchmentTiles.end();
++}
++
++bool StationCatchment::IsEmpty() const
++{
++	return this->catchmentTiles.empty();
++}
++
++void StationCatchment::BeforeAddTile(TileIndex tile, uint catchmentRadius)
++{
++	int x = TileX(tile);
++	int y = TileY(tile);
++	TileIndex top_left = TileXY(max<int>(x - catchmentRadius,0),max<int>(y - catchmentRadius, 0));
++	int w = min<int>(x + catchmentRadius, MapMaxX()) - TileX(top_left) + 1;
++	int h = min<int>(y + catchmentRadius, MapMaxY()) - TileY(top_left) + 1;
++	if (IsEmpty()) {
++		/* we are adding the first station tile */
++		TILE_AREA_LOOP(t, TileArea(top_left, w, h) ) {
++			std::set<TileIndex> fromSet;
++			fromSet.insert(tile);
++			this->catchmentTiles[t] = fromSet;
++		}
++	} else {		
++		TILE_AREA_LOOP(t, TileArea(top_left, w, h) ) {
++			std::map<TileIndex, std::set<TileIndex> >::iterator found = this->catchmentTiles.find(t);
++			if ( found == this->catchmentTiles.end()) {
++				std::set<TileIndex> fromSet;
++				fromSet.insert(tile);
++				this->catchmentTiles[t] = fromSet;
++			} else if ((*found).second.find(tile) == (*found).second.end()) {
++				(*found).second.insert(tile);
++			}
++		}
++	}
++}
++
++void StationCatchment::BeforeAddRect(TileIndex tile, int w, int h, uint catchmentRadius)
++{
++	TILE_AREA_LOOP(t, TileArea(tile, w, h) ) {
++		this->BeforeAddTile(t, catchmentRadius);
++	}
++}
++
++void StationCatchment::AfterRemoveTile(TileIndex tile, uint catchmentRadius)
++{
++	int x = TileX(tile);
++	int y = TileY(tile);
++	TileIndex top_left = TileXY(max<int>(x - catchmentRadius,0),max<int>(y - catchmentRadius, 0));
++	int w = min<int>(x + catchmentRadius, MapMaxX()) - TileX(top_left) + 1;
++	int h = min<int>(y + catchmentRadius, MapMaxY()) - TileY(top_left) + 1;
++	TILE_AREA_LOOP(t, TileArea(top_left, w, h)) {
++		std::map<TileIndex, std::set<TileIndex> >::iterator found = this->catchmentTiles.find(t);
++		assert(found != this->catchmentTiles.end());
++		std::set<TileIndex>::iterator stTileIter = (*found).second.find(tile);
++		assert(stTileIter != (*found).second.end());
++		(*found).second.erase(stTileIter);
++		if ((*found).second.empty()) {
++			// tile t is no longer in StationCatchment
++			this->catchmentTiles.erase(found);
++		}
++	}
++}
++
++void StationCatchment::AfterRemoveRect(TileIndex tile, int w, int h, uint catchmentRadius)
++{
++	TILE_AREA_LOOP(t, TileArea(tile, w, h)) {
++		this->AfterRemoveTile(t, catchmentRadius);
++	}
++}
+\ No newline at end of file
+diff -r fb7b140f2b8e src/station_base.h
+--- a/src/station_base.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/station_base.h	Mon Dec 29 00:02:42 2014 +0000
+@@ -19,7 +19,9 @@
+ #include "industry_type.h"
+ #include "linkgraph/linkgraph_type.h"
+ #include "newgrf_storage.h"
++#include "core/smallvec_type.hpp"
+ #include <map>
++#include <set>
+ 
+ typedef Pool<BaseStation, StationID, 32, 64000> StationPool;
+ extern StationPool _station_pool;
+@@ -299,6 +301,25 @@
+ 	}
+ };
+ 
++enum CatchmentType {
++	ACCEPTANCE = 0,
++	PRODUCTION = 1,
++	INDUSTRY = 2
++};
++
++struct StationCatchment {
++	std::map<TileIndex, std::set<TileIndex> > catchmentTiles;
++public:
++	StationCatchment();
++	void MakeEmpty();
++	bool IsTileInCatchment(TileIndex tile) const;
++	bool IsEmpty() const;
++	void BeforeAddTile(TileIndex tile, uint catchmentRadius);
++	void BeforeAddRect(TileIndex tile, int w, int h, uint catchmentRadius);
++	void AfterRemoveTile(TileIndex tile, uint catchmentRadius);
++	void AfterRemoveRect(TileIndex tile, int w, int h, uint catchmentRadius);
++};
++
+ /** All airport-related information. Only valid if tile != INVALID_TILE. */
+ struct Airport : public TileArea {
+ 	Airport() : TileArea(INVALID_TILE, 0, 0) {}
+@@ -472,6 +493,8 @@
+ 
+ 	IndustryVector industries_near; ///< Cached list of industries near the station that can accept cargo, @see DeliverGoodsToIndustry()
+ 
++	StationCatchment catchment;
++
+ 	Station(TileIndex tile = INVALID_TILE);
+ 	~Station();
+ 
+@@ -487,6 +510,11 @@
+ 	static void RecomputeIndustriesNearForAll();
+ 
+ 	uint GetCatchmentRadius() const;
++
++	bool IsTileInCatchmentArea(const TileInfo* ti, CatchmentType type) const;
++
++	void MarkAcceptanceTilesDirty() const;
++
+ 	Rect GetCatchmentRect() const;
+ 
+ 	/* virtual */ inline bool TileBelongsToRailStation(TileIndex tile) const
+diff -r fb7b140f2b8e src/station_cmd.cpp
+--- a/src/station_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/station_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -42,6 +42,7 @@
+ #include "waypoint_base.h"
+ #include "waypoint_func.h"
+ #include "pbs.h"
++#include "overlay_cmd.h"
+ #include "debug.h"
+ #include "core/random_func.hpp"
+ #include "company_base.h"
+@@ -632,6 +633,7 @@
+ 
+ 	/* redraw the station view since acceptance changed */
+ 	SetWindowWidgetDirty(WC_STATION_VIEW, st->index, WID_SV_ACCEPT_RATING_LIST);
++	if (Overlays::Instance()->HasStation(st)) st->MarkAcceptanceTilesDirty();
+ }
+ 
+ static void UpdateStationSignCoord(BaseStation *st)
+@@ -701,11 +703,16 @@
+ static void DeleteStationIfEmpty(BaseStation *st)
+ {
+ 	if (!st->IsInUse()) {
++		if (Station::IsExpected(st)) Overlays::Instance()->RemoveStation((Station *)st);
+ 		st->delete_ctr = 0;
+ 		InvalidateWindowData(WC_STATION_LIST, st->owner, 0);
+ 	}
+ 	/* station remains but it probably lost some parts - station sign should stay in the station boundaries */
+ 	UpdateStationSignCoord(st);
++
++	if (Station::IsExpected(st)) {
++		MarkWholeScreenDirty();
++	}
+ }
+ 
+ CommandCost ClearTile_Station(TileIndex tile, DoCommandFlag flags);
+@@ -1244,6 +1251,7 @@
+ 		st->AddFacility(FACIL_TRAIN, new_location.tile);
+ 
+ 		st->rect.BeforeAddRect(tile_org, w_org, h_org, StationRect::ADD_TRY);
++		st->catchment.BeforeAddRect(tile_org, w_org, h_org, CA_TRAIN);
+ 
+ 		if (statspec != NULL) {
+ 			/* Include this station spec's animation trigger bitmask
+@@ -1489,6 +1497,7 @@
+ 			Track track = GetRailStationTrack(tile);
+ 			Owner owner = GetTileOwner(tile);
+ 			RailType rt = GetRailType(tile);
++			if (Station::IsExpected(st)) ((Station *)st)->catchment.AfterRemoveTile(tile, CA_TRAIN);
+ 			Train *v = NULL;
+ 
+ 			if (HasStationReservation(tile)) {
+@@ -1509,6 +1518,7 @@
+ 			DoClearSquare(tile);
+ 			DeleteNewGRFInspectWindow(GSF_STATIONS, tile);
+ 			if (build_rail) MakeRailNormal(tile, owner, TrackToTrackBits(track), rt);
++			if (Station::IsExpected(st) && Overlays::Instance()->HasStation((Station *)st)) ((Station *)st)->MarkAcceptanceTilesDirty();
+ 			Company::Get(owner)->infrastructure.station--;
+ 			DirtyCompanyInfrastructureWindows(owner);
+ 
+@@ -1581,6 +1591,7 @@
+ 		Station *st = *stp;
+ 
+ 		if (st->train_station.tile == INVALID_TILE) SetWindowWidgetDirty(WC_STATION_VIEW, st->index, WID_SV_TRAINS);
++		if (Overlays::Instance()->HasStation(st)) st->MarkAcceptanceTilesDirty();
+ 		st->MarkTilesDirty(false);
+ 		st->RecomputeIndustriesNear();
+ 	}
+@@ -1647,6 +1658,7 @@
+ 			/* read variables before the station tile is removed */
+ 			Track track = GetRailStationTrack(tile);
+ 			Owner owner = GetTileOwner(tile); // _current_company can be OWNER_WATER
++			if (Station::IsExpected(st)) ((Station *)st)->catchment.AfterRemoveTile(tile, CA_TRAIN);
+ 			Train *v = NULL;
+ 			if (HasStationReservation(tile)) {
+ 				v = GetTrainForReservation(tile, track);
+@@ -1656,6 +1668,7 @@
+ 			Company::Get(owner)->infrastructure.station--;
+ 			DoClearSquare(tile);
+ 			DeleteNewGRFInspectWindow(GSF_STATIONS, tile);
++			if (Station::IsExpected(st) && Overlays::Instance()->HasStation((Station *)st)) ((Station *)st)->MarkAcceptanceTilesDirty();
+ 			AddTrackToSignalBuffer(tile, track, owner);
+ 			YapfNotifyTrackLayoutChange(tile, track);
+ 			if (v != NULL) TryPathReserve(v, true);
+@@ -1860,6 +1873,7 @@
+ 			st->AddFacility((type) ? FACIL_TRUCK_STOP : FACIL_BUS_STOP, cur_tile);
+ 
+ 			st->rect.BeforeAddTile(cur_tile, StationRect::ADD_TRY);
++			st->catchment.BeforeAddTile(cur_tile, type ? CA_TRUCK : CA_BUS);
+ 
+ 			RoadStopType rs_type = type ? ROADSTOP_TRUCK : ROADSTOP_BUS;
+ 			if (is_drive_through) {
+@@ -1988,6 +2002,7 @@
+ 			DoClearSquare(tile);
+ 		}
+ 
++		if (Overlays::Instance()->HasStation(st)) st->MarkAcceptanceTilesDirty();
+ 		SetWindowWidgetDirty(WC_STATION_VIEW, st->index, WID_SV_ROADVEHS);
+ 		delete cur_stop;
+ 
+@@ -2001,6 +2016,7 @@
+ 		}
+ 
+ 		st->rect.AfterRemoveTile(st, tile);
++		st->catchment.AfterRemoveTile(tile, is_truck ? CA_TRUCK : CA_BUS);
+ 
+ 		st->UpdateVirtCoord();
+ 		st->RecomputeIndustriesNear();
+@@ -2291,6 +2307,7 @@
+ 			MakeAirport(iter, st->owner, st->index, iter.GetStationGfx(), WATER_CLASS_INVALID);
+ 			SetStationTileRandomBits(iter, GB(Random(), 0, 4));
+ 			st->airport.Add(iter);
++			st->catchment.BeforeAddTile(iter, as->catchment);
+ 
+ 			if (AirportTileSpec::Get(GetTranslatedAirportTileID(iter.GetStationGfx()))->animation.status != ANIM_STATUS_NO_ANIMATION) AddAnimatedTile(iter);
+ 		}
+@@ -2364,8 +2381,10 @@
+ 		cost.AddCost(_price[PR_CLEAR_STATION_AIRPORT]);
+ 
+ 		if (flags & DC_EXEC) {
++			const AirportSpec *as = st->airport.GetSpec();
+ 			if (IsHangarTile(tile_cur)) OrderBackup::Reset(tile_cur, false);
+ 			DeleteAnimatedTile(tile_cur);
++			st->catchment.AfterRemoveTile(tile_cur, as->catchment);
+ 			DoClearSquare(tile_cur);
+ 			DeleteNewGRFInspectWindow(GSF_AIRPORTTILES, tile_cur);
+ 		}
+@@ -2534,6 +2553,7 @@
+ 		st->AddFacility(FACIL_DOCK, tile);
+ 
+ 		st->rect.BeforeAddRect(dock_area.tile, dock_area.w, dock_area.h, StationRect::ADD_TRY);
++		st->catchment.BeforeAddRect(dock_area.tile, dock_area.w, dock_area.h, CA_DOCK);
+ 
+ 		/* If the water part of the dock is on a canal, update infrastructure counts.
+ 		 * This is needed as we've unconditionally cleared that tile before. */
+@@ -2578,10 +2598,13 @@
+ 	if (ret.Failed()) return ret;
+ 
+ 	if (flags & DC_EXEC) {
++		st->catchment.AfterRemoveTile(tile1, CA_DOCK);
++		st->catchment.AfterRemoveTile(tile2, CA_DOCK);
+ 		DoClearSquare(tile1);
+ 		MarkTileDirtyByTile(tile1);
+ 		MakeWaterKeepingClass(tile2, st->owner);
+ 
++		if (Overlays::Instance()->HasStation(st)) st->MarkAcceptanceTilesDirty();
+ 		st->rect.AfterRemoveTile(st, tile1);
+ 		st->rect.AfterRemoveTile(st, tile2);
+ 
+@@ -2906,6 +2929,8 @@
+ 		}
+ 	}
+ 
++	DrawOverlay(ti, MP_STATION);
++
+ 	if (HasStationRail(ti->tile) && HasCatenaryDrawn(GetRailType(ti->tile))) DrawCatenary(ti);
+ 
+ 	if (HasBit(roadtypes, ROADTYPE_TRAM)) {
+@@ -3908,6 +3933,7 @@
+ 	st->build_date = _date;
+ 
+ 	st->rect.BeforeAddTile(tile, StationRect::ADD_FORCE);
++	st->catchment.BeforeAddTile(tile, st->GetCatchmentRadius());
+ 
+ 	st->UpdateVirtCoord();
+ 	UpdateStationAcceptance(st, false);
+@@ -3918,6 +3944,7 @@
+ {
+ 	Station *st = Station::GetByTile(tile);
+ 
++	st->catchment.AfterRemoveTile(tile, st->GetCatchmentRadius());
+ 	MakeWaterKeepingClass(tile, OWNER_NONE);
+ 
+ 	st->dock_tile = INVALID_TILE;
+@@ -3925,6 +3952,7 @@
+ 	st->facilities &= ~(FACIL_AIRPORT | FACIL_DOCK);
+ 	st->airport.flags = 0;
+ 
++	if (Overlays::Instance()->HasStation(st)) st->MarkAcceptanceTilesDirty();
+ 	st->rect.AfterRemoveTile(st, tile);
+ 
+ 	st->UpdateVirtCoord();
+diff -r fb7b140f2b8e src/station_gui.cpp
+--- a/src/station_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/station_gui.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -30,6 +30,8 @@
+ #include "sortlist_type.h"
+ #include "core/geometry_func.hpp"
+ #include "vehiclelist.h"
++#include "core/math_func.hpp"
++#include "overlay_cmd.h"
+ #include "town.h"
+ #include "linkgraph/linkgraph.h"
+ #include "zoom_func.h"
+@@ -777,6 +779,8 @@
+ 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SV_ACCEPT_RATING_LIST), SetMinimalSize(249, 23), SetResize(1, 0), EndContainer(),
+ 	NWidget(NWID_HORIZONTAL),
+ 		NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
++		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_COVERAGE), SetMinimalSize(60, 12), SetResize(1, 0), SetFill(1, 1),
++					SetDataTip(STR_BUTTON_COVERAGE, STR_STATION_VIEW_COVERAGE_TIP),
+ 			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_LOCATION), SetMinimalSize(45, 12), SetResize(1, 0), SetFill(1, 1),
+ 					SetDataTip(STR_BUTTON_LOCATION, STR_STATION_VIEW_CENTER_TOOLTIP),
+ 			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SV_ACCEPTS_RATINGS), SetMinimalSize(46, 12), SetResize(1, 0), SetFill(1, 1),
+@@ -1404,6 +1408,9 @@
+ 		this->SetWidgetDisabledState(WID_SV_CLOSE_AIRPORT, !(st->facilities & FACIL_AIRPORT) || st->owner != _local_company || st->owner == OWNER_NONE); // Also consider SE, where _local_company == OWNER_NONE
+ 		this->SetWidgetLoweredState(WID_SV_CLOSE_AIRPORT, (st->facilities & FACIL_AIRPORT) && (st->airport.flags & AIRPORT_CLOSED_block) != 0);
+ 
++		/* check lowered stated for some buttons */
++		this->SetWidgetLoweredState(WID_SV_COVERAGE, Overlays::Instance()->HasStation(st));
++
+ 		this->DrawWidgets();
+ 
+ 		if (!this->IsShaded()) {
+@@ -1893,6 +1900,11 @@
+ 				}
+ 				break;
+ 
++			case WID_SV_COVERAGE:
++				Overlays::Instance()->ToggleStation(Station::Get(this->window_number));
++				MarkWholeScreenDirty();
++				break;
++
+ 			case WID_SV_ACCEPTS_RATINGS: {
+ 				/* Swap between 'accepts' and 'ratings' view. */
+ 				int height_change;
+@@ -2075,6 +2087,8 @@
+ 			}
+ 		}
+ 	}
++protected:
++	void Get(WindowNumber window_number);
+ };
+ 
+ const StringID StationViewWindow::_sort_names[] = {
+@@ -2109,7 +2123,12 @@
+  */
+ void ShowStationViewWindow(StationID station)
+ {
+-	AllocateWindowDescFront<StationViewWindow>(&_station_view_desc, station);
++	if (_ctrl_pressed) {
++		Overlays::Instance()->ToggleStation(Station::Get(station));
++		MarkWholeScreenDirty();
++	} else {
++		AllocateWindowDescFront<StationViewWindow>(&_station_view_desc, station);
++	}
+ }
+ 
+ /** Struct containing TileIndex and StationID */
+diff -r fb7b140f2b8e src/town_cmd.cpp
+--- a/src/town_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/town_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -231,7 +231,9 @@
+ 	if (ti->tileh != SLOPE_FLAT) DrawFoundation(ti, FOUNDATION_LEVELED);
+ 
+ 	DrawGroundSprite(dcts->ground.sprite, dcts->ground.pal);
+-
++	
++	DrawOverlay(ti, MP_HOUSE);
++	
+ 	/* If houses are invisible, do not draw the upper part */
+ 	if (IsInvisibilitySet(TO_HOUSES)) return;
+ 
+@@ -250,7 +252,7 @@
+ 
+ 		if (IsTransparencySet(TO_HOUSES)) return;
+ 	}
+-
++	
+ 	{
+ 		int proc = dcts->draw_proc - 1;
+ 
+diff -r fb7b140f2b8e src/tree_cmd.cpp
+--- a/src/tree_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/tree_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -470,6 +470,8 @@
+ 		default: DrawGroundSprite(_clear_land_sprites_snow_desert[GetTreeDensity(ti->tile)] + SlopeToSpriteOffset(ti->tileh), PAL_NONE); break;
+ 	}
+ 
++	DrawOverlay(ti, MP_TREES);
++
+ 	/* Do not draw trees when the invisible trees setting is set */
+ 	if (IsInvisibilitySet(TO_TREES)) return;
+ 
+diff -r fb7b140f2b8e src/tunnelbridge_cmd.cpp
+--- a/src/tunnelbridge_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/tunnelbridge_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -1184,6 +1184,8 @@
+ 				if (surface != 0) DrawGroundSprite(surface + tunnelbridge_direction, PAL_NONE);
+ 			}
+ 
++			DrawOverlay(ti, MP_TUNNELBRIDGE);
++
+ 			/* PBS debugging, draw reserved tracks darker */
+ 			if (_game_mode != GM_MENU && _settings_client.gui.show_track_reservation && HasTunnelBridgeReservation(ti->tile)) {
+ 				DrawGroundSprite(DiagDirToAxis(tunnelbridge_direction) == AXIS_X ? rti->base_sprites.single_x : rti->base_sprites.single_y, PALETTE_CRASH);
+diff -r fb7b140f2b8e src/viewport.cpp
+--- a/src/viewport.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/viewport.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -81,6 +81,8 @@
+ #include "blitter/factory.hpp"
+ #include "strings_func.h"
+ #include "zoom_func.h"
++#include "overlay.h"
++#include "overlay_cmd.h"
+ #include "vehicle_func.h"
+ #include "company_func.h"
+ #include "waypoint_func.h"
+@@ -3531,6 +3533,17 @@
+ 	return p;
+ }
+ 
++void DrawOverlay(const TileInfo *ti, TileType tt) 
++{
++	if (Overlays::Instance()->IsTileInCatchmentArea(ti, PRODUCTION)) {
++		if(tt == MP_STATION)
++			DrawTileSelectionRect(ti, PALETTE_SEL_TILE_RED);
++		else
++			DrawTileSelectionRect(ti, PALETTE_SEL_TILE_BLUE);
++	} else if (Overlays::Instance()->IsTileInCatchmentArea(ti, ACCEPTANCE)) { 
++		DrawTileSelectionRect(ti, PAL_NONE);
++	}
++}
+ /** Helper class for getting the best sprite sorter. */
+ struct ViewportSSCSS {
+ 	VpSorterChecker fct_checker; ///< The check function.
+diff -r fb7b140f2b8e src/viewport_func.h
+--- a/src/viewport_func.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/viewport_func.h	Mon Dec 29 00:02:42 2014 +0000
+@@ -17,6 +17,7 @@
+ #include "window_type.h"
+ #include "tile_type.h"
+ #include "station_type.h"
++#include "tile_cmd.h"
+ 
+ static const int TILE_HEIGHT_STEP = 50; ///< One Z unit tile height difference is displayed as 50m.
+ 
+@@ -84,4 +85,6 @@
+ 
+ Point GetViewportStationMiddle(const ViewPort *vp, const Station *st);
+ 
+-#endif /* VIEWPORT_FUNC_H */
++void DrawOverlay(const TileInfo *ti, TileType tt);
++
++#endif /* VIEWPORT_FUNC_H */
+\ No newline at end of file
+diff -r fb7b140f2b8e src/water_cmd.cpp
+--- a/src/water_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/water_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+@@ -865,6 +865,7 @@
+ 			DrawWaterDepot(ti);
+ 			break;
+ 	}
++	DrawOverlay(ti, MP_WATER);
+ }
+ 
+ void DrawShipDepotSprite(int x, int y, Axis axis, DepotPart part)
+diff -r fb7b140f2b8e src/widgets/station_widget.h
+--- a/src/widgets/station_widget.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/widgets/station_widget.h	Mon Dec 29 00:02:42 2014 +0000
+@@ -23,6 +23,7 @@
+ 	WID_SV_SCROLLBAR,          ///< Scrollbar.
+ 	WID_SV_ACCEPT_RATING_LIST, ///< List of accepted cargoes / rating of cargoes.
+ 	WID_SV_LOCATION,           ///< 'Location' button.
++	WID_SV_COVERAGE,           ///< Show area coverage button
+ 	WID_SV_ACCEPTS_RATINGS,    ///< 'Accepts' / 'Ratings' button.
+ 	WID_SV_RENAME,             ///< 'Rename' button.
+ 	WID_SV_CLOSE_AIRPORT,      ///< 'Close airport' button.

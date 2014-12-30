@@ -1,0 +1,60 @@
+# HG changeset patch
+# Parent 7392e2efd42cd6a88e6688014d2eb32a109fc9a1
+
+diff -r 7392e2efd42c src/network/network_gui.cpp
+--- a/src/network/network_gui.cpp	Mon Dec 29 18:54:17 2014 +0000
++++ b/src/network/network_gui.cpp	Mon Dec 29 18:57:19 2014 +0000
+@@ -38,6 +38,7 @@
+ #include "../table/sprites.h"
+ 
+ #include "../stringfilter_type.h"
++#include "../watch_gui.h"
+ 
+ #include "../safeguards.h"
+ 
+@@ -1690,7 +1691,13 @@
+ {
+ 	NetworkServerKickOrBanIP(ci->client_id, true);
+ }
+-
++static void ClientList_Watch(const NetworkClientInfo *ci)
++{
++	if (ci != NULL){
++		CompanyID cid = (CompanyID)ci->client_id;
++		ShowWatchWindow(cid, 1);
++	}
++}
+ static void ClientList_GiveMoney(const NetworkClientInfo *ci)
+ {
+ 	ShowNetworkGiveMoneyWindow(ci->client_playas);
+@@ -1759,6 +1766,9 @@
+ 			if (Company::IsValidID(_local_company) && Company::IsValidID(ci->client_playas) && _settings_game.economy.give_money) {
+ 				this->AddAction(STR_NETWORK_CLIENTLIST_GIVE_MONEY, &ClientList_GiveMoney);
+ 			}
++			if (ci->client_id != CLIENT_ID_SERVER ) {
++				this->AddAction(STR_XI_WATCH, &ClientList_Watch);
++			}
+ 		}
+ 
+ 		/* A server can kick clients (but not himself). */
+diff -r 7392e2efd42c src/toolbar_gui.cpp
+--- a/src/toolbar_gui.cpp	Mon Dec 29 18:54:17 2014 +0000
++++ b/src/toolbar_gui.cpp	Mon Dec 29 18:57:19 2014 +0000
+@@ -53,6 +53,8 @@
+ #include "network/network_gui.h"
+ #include "network/network_func.h"
+ 
++#include "watch_gui.h"
++
+ #include "safeguards.h"
+ 
+ 
+@@ -572,7 +574,7 @@
+ static CallBackFunction MenuClickPatches(int index)
+ {
+ 	switch (index) {
+-		case 0: 0; // Just a place holder
++		case 0: ShowWatchWindow(INVALID_COMPANY, 0); 
+ 	}
+ 	return CBF_NONE;
+ }

@@ -1,0 +1,207 @@
+# HG changeset patch
+# Parent fb7b140f2b8ea48eebea7915b57a57e5143680c4
+
+diff -r fb7b140f2b8e src/lang/english.txt
+--- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/lang/english.txt	Mon Dec 29 01:10:36 2014 +0000
+@@ -2279,6 +2279,7 @@
+ STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Toggle transparency for structures like lighthouses and antennas. Ctrl+Click to lock
+ STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Toggle transparency for catenary. Ctrl+Click to lock
+ STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Toggle transparency for loading indicators. Ctrl+Click to lock
++STR_TRANSPARENT_TUNNELS_TOOLTIP                                 :{BLACK}Toggle transparency for vehicles in tunnels. Ctrl+Click to lock.
+ STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Set objects invisible instead of transparent
+ 
+ # Linkgraph legend window
+diff -r fb7b140f2b8e src/lang/russian.txt
+--- a/src/lang/russian.txt	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/lang/russian.txt	Mon Dec 29 01:10:36 2014 +0000
+@@ -2225,6 +2225,7 @@
+ 
+ # Network company list added strings
+ STR_NETWORK_COMPANY_LIST_CLIENT_LIST                            :{WHITE}Список клиентов
++STR_TRANSPARENT_TUNNELS_TOOLTIP                                 :{BLACK}Переключение прозрачности туннелей. Ctrl+щелчок - блокировка.
+ STR_NETWORK_COMPANY_LIST_SPECTATE                               :{WHITE}Наблюдать
+ STR_NETWORK_COMPANY_LIST_NEW_COMPANY                            :{WHITE}Новая компания
+ 
+diff -r fb7b140f2b8e src/roadveh_cmd.cpp
+--- a/src/roadveh_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/roadveh_cmd.cpp	Mon Dec 29 01:10:36 2014 +0000
+@@ -1154,7 +1154,7 @@
+ 		v->x_pos = gp.x;
+ 		v->y_pos = gp.y;
+ 		v->UpdatePosition();
+-		if ((v->vehstatus & VS_HIDDEN) == 0) v->Vehicle::UpdateViewport(true);
++		if (v->IsDrawn()) VehicleUpdateViewport(v, true);
+ 		return true;
+ 	}
+ 
+diff -r fb7b140f2b8e src/table/misc_settings.ini
+--- a/src/table/misc_settings.ini	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/table/misc_settings.ini	Mon Dec 29 01:10:36 2014 +0000
+@@ -255,7 +255,7 @@
+ var      = _transparency_opt
+ def      = 0
+ min      = 0
+-max      = 0x1FF
++max      = 0x3FF
+ cat      = SC_BASIC
+ 
+ [SDTG_VAR]
+@@ -264,7 +264,7 @@
+ var      = _transparency_lock
+ def      = 0
+ min      = 0
+-max      = 0x1FF
++max      = 0x3FF
+ cat      = SC_BASIC
+ 
+ [SDTG_VAR]
+diff -r fb7b140f2b8e src/train_cmd.cpp
+--- a/src/train_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/train_cmd.cpp	Mon Dec 29 01:10:36 2014 +0000
+@@ -3335,7 +3335,7 @@
+ 				v->x_pos = gp.x;
+ 				v->y_pos = gp.y;
+ 				v->UpdatePosition();
+-				if ((v->vehstatus & VS_HIDDEN) == 0) v->Vehicle::UpdateViewport(true);
++				if (v->IsDrawn()) VehicleUpdateViewport(v, true);
+ 				continue;
+ 			}
+ 		}
+@@ -3862,7 +3862,7 @@
+ 	}
+ 
+ 	for (Train *u = v; u != NULL; u = u->Next()) {
+-		if ((u->vehstatus & VS_HIDDEN) != 0) continue;
++		if (!u->IsDrawn()) continue;
+ 
+ 		u->UpdateViewport(false, false);
+ 	}
+diff -r fb7b140f2b8e src/transparency.h
+--- a/src/transparency.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/transparency.h	Mon Dec 29 01:10:36 2014 +0000
+@@ -31,6 +31,7 @@
+ 	TO_STRUCTURES, ///< other objects such as transmitters and lighthouses
+ 	TO_CATENARY,   ///< catenary
+ 	TO_LOADING,    ///< loading indicators
++	TO_TUNNELS,    ///< vehicles in tunnels
+ 	TO_END,
+ 	TO_INVALID,    ///< Invalid transparency option
+ };
+diff -r fb7b140f2b8e src/transparency_gui.cpp
+--- a/src/transparency_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/transparency_gui.cpp	Mon Dec 29 01:10:36 2014 +0000
+@@ -52,6 +52,7 @@
+ 			case WID_TT_BRIDGES:
+ 			case WID_TT_STRUCTURES:
+ 			case WID_TT_CATENARY:
++			case WID_TT_TUNNELS:
+ 			case WID_TT_LOADING: {
+ 				uint i = widget - WID_TT_BEGIN;
+ 				if (HasBit(_transparency_lock, i)) DrawSprite(SPR_LOCK, PAL_NONE, r.left + 1, r.top + 1);
+@@ -59,7 +60,7 @@
+ 			}
+ 			case WID_TT_BUTTONS:
+ 				for (uint i = WID_TT_BEGIN; i < WID_TT_END; i++) {
+-					if (i == WID_TT_LOADING) continue; // Do not draw button for invisible loading indicators.
++					if (i >= WID_TT_LOADING) continue; // Do not draw button for invisible loading indicators.
+ 
+ 					const NWidgetBase *wi = this->GetWidget<NWidgetBase>(i);
+ 					DrawFrameRect(wi->pos_x + 1, r.top + 2, wi->pos_x + wi->current_x - 2, r.bottom - 2, COLOUR_PALE_GREEN,
+@@ -141,6 +142,7 @@
+ 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_TT_STRUCTURES), SetMinimalSize(22, 22), SetFill(0, 1), SetDataTip(SPR_IMG_TRANSMITTER, STR_TRANSPARENT_STRUCTURES_TOOLTIP),
+ 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_TT_CATENARY), SetMinimalSize(22, 22), SetFill(0, 1), SetDataTip(SPR_BUILD_X_ELRAIL, STR_TRANSPARENT_CATENARY_TOOLTIP),
+ 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_TT_LOADING), SetMinimalSize(22, 22), SetFill(0, 1), SetDataTip(SPR_IMG_TRAINLIST, STR_TRANSPARENT_LOADING_TOOLTIP),
++		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_TT_TUNNELS), SetMinimalSize(22, 22), SetFill(0, 1), SetDataTip(SPR_IMG_ROAD_TUNNEL, STR_TRANSPARENT_TUNNELS_TOOLTIP),
+ 		NWidget(WWT_PANEL, COLOUR_DARK_GREEN), SetFill(1, 1), EndContainer(),
+ 	EndContainer(),
+ 	/* Panel with 'invisibility' buttons. */
+@@ -158,6 +160,7 @@
+ /**
+  * Show the transparency toolbar.
+  */
++
+ void ShowTransparencyToolbar()
+ {
+ 	AllocateWindowDescFront<TransparenciesWindow>(&_transparency_desc, 0);
+diff -r fb7b140f2b8e src/vehicle.cpp
+--- a/src/vehicle.cpp	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/vehicle.cpp	Mon Dec 29 01:10:36 2014 +0000
+@@ -221,6 +221,14 @@
+ 	return RandomRange(pass + 1); // Randomise deceased passengers.
+ }
+ 
++bool Vehicle::IsDrawn() const
++{
++	return !(this->vehstatus & VS_HIDDEN) ||
++			(IsTransparencySet(TO_TUNNELS) &&
++				((this->type == VEH_TRAIN && Train::From(this)->track == TRACK_BIT_WORMHOLE) ||
++				(this->type == VEH_ROAD && RoadVehicle::From(this)->state == RVSB_WORMHOLE)));
++}
++
+ 
+ /**
+  * Displays a "NewGrf Bug" error message for a engine, and pauses the game if not networking.
+@@ -809,7 +817,7 @@
+ 
+ 	/* sometimes, eg. for disaster vehicles, when company bankrupts, when removing crashed/flooded vehicles,
+ 	 * it may happen that vehicle chain is deleted when visible */
+-	if (!(this->vehstatus & VS_HIDDEN)) this->MarkAllViewportsDirty();
++	if (this->IsDrawn()) MarkSingleVehicleDirty(this);
+ 
+ 	Vehicle *v = this->Next();
+ 	this->SetNext(NULL);
+@@ -1013,7 +1021,7 @@
+ 	if (v->vehstatus & VS_DEFPAL) pal = (v->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(v);
+ 
+ 	/* Check whether the vehicle shall be transparent due to the game state */
+-	bool shadowed = (v->vehstatus & VS_SHADOW) != 0;
++	bool shadowed = (v->vehstatus & (VS_SHADOW | VS_HIDDEN));
+ 
+ 	if (v->type == VEH_EFFECT) {
+ 		/* Check whether the vehicle shall be transparent/invisible due to GUI settings.
+@@ -1064,7 +1072,7 @@
+ 			const Vehicle *v = _vehicle_viewport_hash[x + y]; // already masked & 0xFFF
+ 
+ 			while (v != NULL) {
+-				if (!(v->vehstatus & VS_HIDDEN) &&
++				if (v->IsDrawn() &&
+ 						l <= v->coord.right &&
+ 						t <= v->coord.bottom &&
+ 						r >= v->coord.left &&
+@@ -1099,7 +1107,7 @@
+ 	y = ScaleByZoom(y, vp->zoom) + vp->virtual_top;
+ 
+ 	FOR_ALL_VEHICLES(v) {
+-		if ((v->vehstatus & (VS_HIDDEN | VS_UNCLICKABLE)) == 0 &&
++		if (v->IsDrawn() && !(v->vehstatus & VS_UNCLICKABLE) &&
+ 				x >= v->coord.left && x <= v->coord.right &&
+ 				y >= v->coord.top && y <= v->coord.bottom) {
+ 
+diff -r fb7b140f2b8e src/vehicle_base.h
+--- a/src/vehicle_base.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/vehicle_base.h	Mon Dec 29 01:10:36 2014 +0000
+@@ -295,6 +295,12 @@
+ 	uint GetConsistTotalCapacity() const;
+ 
+ 	/**
++	 * Is this vehicle drawn?
++	 * @return true if it is drawn
++	 */
++	bool IsDrawn() const;
++
++	/**
+ 	 * Marks the vehicles to be redrawn and updates cached variables
+ 	 *
+ 	 * This method marks the area of the vehicle on the screen as dirty.
+diff -r fb7b140f2b8e src/widgets/transparency_widget.h
+--- a/src/widgets/transparency_widget.h	Sat Dec 27 17:45:27 2014 +0000
++++ b/src/widgets/transparency_widget.h	Mon Dec 29 01:10:36 2014 +0000
+@@ -25,6 +25,7 @@
+ 	WID_TT_STRUCTURES,               ///< Object structure transparency toggle button.
+ 	WID_TT_CATENARY,                 ///< Catenary transparency toggle button.
+ 	WID_TT_LOADING,                  ///< Loading indicators transparency toggle button.
++	WID_TT_TUNNELS,
+ 	WID_TT_END,                      ///< End of toggle buttons.
+ 
+ 	/* Panel with buttons for invisibility */
