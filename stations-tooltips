@@ -1,14 +1,13 @@
 # HG changeset patch
-# Parent fb7b140f2b8ea48eebea7915b57a57e5143680c4
+# Parent 2e2646361c239d3175b3b8d72a68e67410b7801e
 
-diff -r fb7b140f2b8e src/lang/english.txt
---- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/lang/english.txt	Mon Dec 29 13:24:07 2014 +0000
-@@ -4968,3 +4968,12 @@
- STR_SHIP                                                        :{BLACK}{SHIP}
+diff -r 2e2646361c23 src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:58:38 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:58:40 2015 +0000
+@@ -4969,6 +4969,15 @@
  
  STR_TOOLBAR_RAILTYPE_VELOCITY                                   :{STRING} ({VELOCITY})
-+
+ 
 +#tooltips extra
 +#STR_CONFIG_SETTING_ENABLE_EXTRA_TOOLTIPS                        :Enable extra tooltips{STRING2}
 +STR_TTE_HOUSE_NAME                                              :{LTBLUE}{STRING}
@@ -17,9 +16,13 @@ diff -r fb7b140f2b8e src/lang/english.txt
 +STR_TTE_INDUSTRY                                                :{WHITE}{STRING}  {BLACK}{CARGO_SHORT} {YELLOW}{NUM} %
 +STR_TTE_STATION_NAME                                            :{LTBLUE}{STATION}
 +STR_TTE_STATION                                                 :{WHITE}{STRING}  {BLACK}{CARGO_SHORT} {YELLOW}{NUM} %
-diff -r fb7b140f2b8e src/main_gui.cpp
---- a/src/main_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/main_gui.cpp	Mon Dec 29 13:24:07 2014 +0000
++
+ # Patches Menu
+ STR_WATCH_WINDOW                                                :Watch Company
+ 
+diff -r 2e2646361c23 src/main_gui.cpp
+--- a/src/main_gui.cpp	Sat Jan 03 15:58:38 2015 +0000
++++ b/src/main_gui.cpp	Sat Jan 03 15:58:40 2015 +0000
 @@ -464,6 +464,10 @@
  		/* Forward the message to the appropriate toolbar (ingame or scenario editor) */
  		InvalidateWindowData(WC_MAIN_TOOLBAR, 0, data, true);
@@ -31,9 +34,9 @@ diff -r fb7b140f2b8e src/main_gui.cpp
  
  	static HotkeyList hotkeys;
  };
-diff -r fb7b140f2b8e src/misc_gui.cpp
---- a/src/misc_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/misc_gui.cpp	Mon Dec 29 13:24:07 2014 +0000
+diff -r 2e2646361c23 src/misc_gui.cpp
+--- a/src/misc_gui.cpp	Sat Jan 03 15:58:38 2015 +0000
++++ b/src/misc_gui.cpp	Sat Jan 03 15:58:40 2015 +0000
 @@ -31,8 +31,17 @@
  
  #include "table/strings.h"
@@ -286,9 +289,9 @@ diff -r fb7b140f2b8e src/misc_gui.cpp
 +	DeleteWindowById(WC_TOOLTIPS_EXTRA, 0);
 +	new TooltipsExtraWindow(parent, param, close_tooltip);
 +}
-diff -r fb7b140f2b8e src/viewport_gui.cpp
---- a/src/viewport_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/viewport_gui.cpp	Mon Dec 29 13:24:07 2014 +0000
+diff -r 2e2646361c23 src/viewport_gui.cpp
+--- a/src/viewport_gui.cpp	Sat Jan 03 15:58:38 2015 +0000
++++ b/src/viewport_gui.cpp	Sat Jan 03 15:58:40 2015 +0000
 @@ -143,6 +143,10 @@
  		}
  	}
@@ -300,9 +303,9 @@ diff -r fb7b140f2b8e src/viewport_gui.cpp
  	/**
  	 * Some data on this window has become invalid.
  	 * @param data Information about the changed data.
-diff -r fb7b140f2b8e src/window_gui.h
---- a/src/window_gui.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/window_gui.h	Mon Dec 29 13:24:07 2014 +0000
+diff -r 2e2646361c23 src/window_gui.h
+--- a/src/window_gui.h	Sat Jan 03 15:58:38 2015 +0000
++++ b/src/window_gui.h	Sat Jan 03 15:58:40 2015 +0000
 @@ -872,6 +872,7 @@
  };
  
@@ -311,9 +314,9 @@ diff -r fb7b140f2b8e src/window_gui.h
  
  /* widget.cpp */
  int GetWidgetFromPos(const Window *w, int x, int y);
-diff -r fb7b140f2b8e src/window_type.h
---- a/src/window_type.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/window_type.h	Mon Dec 29 13:24:07 2014 +0000
+diff -r 2e2646361c23 src/window_type.h
+--- a/src/window_type.h	Sat Jan 03 15:58:38 2015 +0000
++++ b/src/window_type.h	Sat Jan 03 15:58:40 2015 +0000
 @@ -109,6 +109,7 @@
  	 *   - 0 = #ToolTipsWidgets
  	 */

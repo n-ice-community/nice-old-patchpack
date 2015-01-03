@@ -1,7 +1,7 @@
-diff -r fb7b140f2b8e src/company_cmd.cpp
---- a/src/company_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/company_cmd.cpp	Mon Dec 29 00:24:14 2014 +0000
-@@ -575,7 +575,9 @@
+diff -r 10bde8eda15d src/company_cmd.cpp
+--- a/src/company_cmd.cpp	Sat Jan 03 15:58:43 2015 +0000
++++ b/src/company_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
+@@ -577,7 +577,9 @@
  
  	AI::BroadcastNewEvent(new ScriptEventCompanyNew(c->index), c->index);
  	Game::NewEvent(new ScriptEventCompanyNew(c->index));
@@ -12,9 +12,9 @@ diff -r fb7b140f2b8e src/company_cmd.cpp
  	return c;
  }
  
-diff -r fb7b140f2b8e src/lang/english.txt
---- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/lang/english.txt	Mon Dec 29 00:24:14 2014 +0000
+diff -r 10bde8eda15d src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:58:43 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:58:48 2015 +0000
 @@ -1287,7 +1287,7 @@
  STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Delay before tooltips are displayed when hovering the mouse over some interface element. Alternatively tooltips are bound to the right mouse button when this value is set to 0.
  STR_CONFIG_SETTING_HOVER_DELAY_VALUE                            :Hover for {COMMA} millisecond{P 0 "" s}
@@ -24,7 +24,7 @@ diff -r fb7b140f2b8e src/lang/english.txt
  STR_CONFIG_SETTING_POPULATION_IN_LABEL_HELPTEXT                 :Display the population of towns in their label on the map
  STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS                         :Thickness of lines in graphs: {STRING2}
  STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS_HELPTEXT                :Width of the line in the graphs. A thin line is more precisely readable, a thicker line is easier to see and colours are easier to distinguish
-@@ -4879,10 +4879,18 @@
+@@ -4880,10 +4880,18 @@
  STR_SAVEGAME_NAME_SPECTATOR                                     :Spectator, {1:STRING1}
  
  # Viewport strings
@@ -35,18 +35,28 @@ diff -r fb7b140f2b8e src/lang/english.txt
 +STR_VIEWPORT_TOWN_POP_EXCELLENT_RATING                          :{WHITE}{TOWN} {GREEN}({COMMA})
  STR_VIEWPORT_TOWN                                               :{WHITE}{TOWN}
  STR_VIEWPORT_TOWN_TINY_BLACK                                    :{TINY_FONT}{BLACK}{TOWN}
- STR_VIEWPORT_TOWN_TINY_WHITE                                    :{TINY_FONT}{WHITE}{TOWN}
 +STR_VIEWPORT_TOWN_TINY_VERY_POOR_RATING                         :{TINY_FONT}{RED}{TOWN}
 +STR_VIEWPORT_TOWN_TINY_MEDIOCRE_RATING                          :{TINY_FONT}{ORANGE}{TOWN}
 +STR_VIEWPORT_TOWN_TINY_GOOD_RATING                              :{TINY_FONT}{YELLOW}{TOWN}
+ STR_VIEWPORT_TOWN_TINY_WHITE                                    :{TINY_FONT}{WHITE}{TOWN}
 +STR_VIEWPORT_TOWN_TINY_EXCELLENT_RATING                         :{TINY_FONT}{GREEN}{TOWN}
  
  STR_VIEWPORT_SIGN_SMALL_BLACK                                   :{TINY_FONT}{BLACK}{SIGN}
  STR_VIEWPORT_SIGN_SMALL_WHITE                                   :{TINY_FONT}{WHITE}{SIGN}
-diff -r fb7b140f2b8e src/town.h
---- a/src/town.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/town.h	Mon Dec 29 00:24:14 2014 +0000
-@@ -75,6 +75,7 @@
+diff -r 10bde8eda15d src/town.h
+--- a/src/town.h	Sat Jan 03 15:58:43 2015 +0000
++++ b/src/town.h	Sat Jan 03 15:58:48 2015 +0000
+@@ -15,6 +15,9 @@
+ #include "viewport_type.h"
+ #include "town_map.h"
+ #include "subsidy_type.h"
++#include "openttd.h"
++#include "table/strings.h"
++#include "company_func.h"
+ #include "newgrf_storage.h"
+ #include "cargotype.h"
+ #include "tilematrix_type.hpp"
+@@ -75,6 +78,7 @@
  	CompanyByte exclusivity;       ///< which company has exclusivity
  	uint8 exclusive_counter;       ///< months till the exclusivity expires
  	int16 ratings[MAX_COMPANIES];  ///< ratings of each company for this town
@@ -54,7 +64,7 @@ diff -r fb7b140f2b8e src/town.h
  
  	TransportedCargoStat<uint32> supplied[NUM_CARGO]; ///< Cargo statistics about supplied cargo.
  	TransportedCargoStat<uint16> received[NUM_TE];    ///< Cargo statistics about received cargotypes.
-@@ -113,6 +114,31 @@
+@@ -113,6 +117,31 @@
  
  	void InitializeLayout(TownLayout layout);
  
@@ -86,9 +96,9 @@ diff -r fb7b140f2b8e src/town.h
  	/**
  	 * Calculate the max town noise.
  	 * The value is counted using the population divided by the content of the
-diff -r fb7b140f2b8e src/town_cmd.cpp
---- a/src/town_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/town_cmd.cpp	Mon Dec 29 00:24:14 2014 +0000
+diff -r 10bde8eda15d src/town_cmd.cpp
+--- a/src/town_cmd.cpp	Sat Jan 03 15:58:43 2015 +0000
++++ b/src/town_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
 @@ -137,6 +137,26 @@
  
  	this->layout = TileHash(TileX(this->xy), TileY(this->xy)) % (NUM_TLS - 1);
@@ -147,7 +157,7 @@ diff -r fb7b140f2b8e src/town_cmd.cpp
  	SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
  }
  
-@@ -3298,6 +3319,7 @@
+@@ -3296,6 +3317,7 @@
  	} else {
  		SetBit(t->have_ratings, _current_company);
  		t->ratings[_current_company] = rating;
@@ -155,13 +165,15 @@ diff -r fb7b140f2b8e src/town_cmd.cpp
  		SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
  	}
  }
-diff -r fb7b140f2b8e src/viewport.cpp
---- a/src/viewport.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/viewport.cpp	Mon Dec 29 00:24:14 2014 +0000
-@@ -1589,6 +1589,7 @@
+diff -r 10bde8eda15d src/viewport.cpp
+--- a/src/viewport.cpp	Sat Jan 03 15:58:43 2015 +0000
++++ b/src/viewport.cpp	Sat Jan 03 15:58:48 2015 +0000
+@@ -1587,8 +1587,7 @@
+ 	const Town *t;
+ 	FOR_ALL_TOWNS(t) {
  		ViewportAddString(dpi, ZOOM_LVL_OUT_16X, &t->cache.sign,
- 				_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
- 				STR_VIEWPORT_TOWN_TINY_WHITE, STR_VIEWPORT_TOWN_TINY_BLACK,
+-				_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
+-				STR_VIEWPORT_TOWN_TINY_WHITE, STR_VIEWPORT_TOWN_TINY_BLACK,
 +				t->Label(), t->SmallLabel(), STR_VIEWPORT_TOWN_TINY_BLACK,
  				t->index, t->cache.population);
  	}

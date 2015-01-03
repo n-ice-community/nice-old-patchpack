@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent fb7b140f2b8ea48eebea7915b57a57e5143680c4
+# Parent ae61687d4f7e49b6125788f0077226be216251c9
 
-diff -r fb7b140f2b8e source.list
---- a/source.list	Sat Dec 27 17:45:27 2014 +0000
-+++ b/source.list	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e source.list
+--- a/source.list	Sat Jan 03 15:58:48 2015 +0000
++++ b/source.list	Sat Jan 03 15:58:51 2015 +0000
 @@ -295,6 +295,8 @@
  order_base.h
  order_func.h
@@ -13,7 +13,7 @@ diff -r fb7b140f2b8e source.list
  pbs.h
  progress.h
  querystring_gui.h
-@@ -574,6 +576,7 @@
+@@ -576,6 +578,7 @@
  misc_cmd.cpp
  object_cmd.cpp
  order_cmd.cpp
@@ -21,9 +21,9 @@ diff -r fb7b140f2b8e source.list
  rail_cmd.cpp
  road_cmd.cpp
  roadveh_cmd.cpp
-diff -r fb7b140f2b8e src/clear_cmd.cpp
---- a/src/clear_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/clear_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/clear_cmd.cpp
+--- a/src/clear_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/clear_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -126,6 +126,7 @@
  			break;
  	}
@@ -32,9 +32,9 @@ diff -r fb7b140f2b8e src/clear_cmd.cpp
  	DrawBridgeMiddle(ti);
  }
  
-diff -r fb7b140f2b8e src/industry_cmd.cpp
---- a/src/industry_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/industry_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/industry_cmd.cpp
+--- a/src/industry_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/industry_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -343,6 +343,8 @@
  		DrawGroundSprite(image, GroundSpritePaletteTransform(image, dits->ground.pal, GENERAL_SPRITE_COLOUR(ind->random_colour)));
  	}
@@ -44,9 +44,9 @@ diff -r fb7b140f2b8e src/industry_cmd.cpp
  	/* If industries are transparent and invisible, do not draw the upper part */
  	if (IsInvisibilitySet(TO_INDUSTRIES)) return;
  
-diff -r fb7b140f2b8e src/lang/english.txt
---- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/lang/english.txt	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:58:51 2015 +0000
 @@ -232,6 +232,7 @@
  STR_TOOLTIP_SORT_ORDER                                          :{BLACK}Select sorting order (descending/ascending)
  STR_TOOLTIP_SORT_CRITERIA                                       :{BLACK}Select sorting criteria
@@ -55,7 +55,7 @@ diff -r fb7b140f2b8e src/lang/english.txt
  STR_BUTTON_SORT_BY                                              :{BLACK}Sort by
  STR_BUTTON_LOCATION                                             :{BLACK}Location
  STR_BUTTON_RENAME                                               :{BLACK}Rename
-@@ -3159,6 +3160,8 @@
+@@ -3160,6 +3161,8 @@
  STR_STATION_VIEW_CENTER_TOOLTIP                                 :{BLACK}Centre main view on station location. Ctrl+Click opens a new viewport on station location
  STR_STATION_VIEW_RENAME_TOOLTIP                                 :{BLACK}Change name of station
  
@@ -64,9 +64,9 @@ diff -r fb7b140f2b8e src/lang/english.txt
  STR_STATION_VIEW_SCHEDULED_TRAINS_TOOLTIP                       :{BLACK}Show all trains which have this station on their schedule
  STR_STATION_VIEW_SCHEDULED_ROAD_VEHICLES_TOOLTIP                :{BLACK}Show all road vehicles which have this station on their schedule
  STR_STATION_VIEW_SCHEDULED_AIRCRAFT_TOOLTIP                     :{BLACK}Show all aircraft which have this station on their schedule
-diff -r fb7b140f2b8e src/newgrf_house.cpp
---- a/src/newgrf_house.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/newgrf_house.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/newgrf_house.cpp
+--- a/src/newgrf_house.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/newgrf_house.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -469,6 +469,8 @@
  		DrawGroundSprite(image, GroundSpritePaletteTransform(image, pal, palette));
  	}
@@ -76,9 +76,9 @@ diff -r fb7b140f2b8e src/newgrf_house.cpp
  	DrawNewGRFTileSeq(ti, dts, TO_HOUSES, stage, palette);
  }
  
-diff -r fb7b140f2b8e src/newgrf_industrytiles.cpp
---- a/src/newgrf_industrytiles.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/newgrf_industrytiles.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/newgrf_industrytiles.cpp
+--- a/src/newgrf_industrytiles.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/newgrf_industrytiles.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -184,6 +184,8 @@
  		}
  	}
@@ -88,9 +88,200 @@ diff -r fb7b140f2b8e src/newgrf_industrytiles.cpp
  	DrawNewGRFTileSeq(ti, dts, TO_INDUSTRIES, stage, GENERAL_SPRITE_COLOUR(rnd_colour));
  }
  
-diff -r fb7b140f2b8e src/rail_cmd.cpp
---- a/src/rail_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/rail_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/overlay.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/overlay.h	Sat Jan 03 15:58:51 2015 +0000
+@@ -0,0 +1,73 @@
++/* $Id$ */
++
++/** @file overlay.h Functions related to overlays. */
++
++#ifndef OVERLAY_H
++#define OVERLAY_H
++
++#include "stdafx.h"
++#include "openttd.h"
++#include "core/bitmath_func.hpp"
++#include "gfx_func.h"
++
++/**
++ * Transparency option bits: which position in _transparency_opt stands for which transparency.
++ * If you change the order, change the order of the ShowTransparencyToolbar() stuff in transparency_gui.cpp too.
++ * If you add or remove an option don't forget to change the transparency 'hot keys' in main_gui.cpp.
++ */
++enum OverlayOption {
++	OO_COVERAGES = 0,  ///< coverage
++	OO_END,
++};
++
++typedef uint OverlayOptionBits; ///< overlay option bits
++extern OverlayOptionBits _overlay_opt;
++extern OverlayOptionBits _overlay_lock;
++
++/**
++ * Check if the overlay option bit is set
++ * and if we aren't in the game menu (there's no overlay)
++ *
++ * @param to the structure which overlay option is ask for
++ */
++static inline bool IsOverlaySet(OverlayOption to)
++{
++	return (HasBit(_overlay_opt, to) && _game_mode != GM_MENU);
++}
++
++/**
++ * Toggle the overlay option bit
++ *
++ * @param to the overlay option to be toggled
++ */
++static inline void ToggleOverlay(OverlayOption to)
++{
++	ToggleBit(_overlay_opt, to);
++}
++
++/**
++ * Toggle the overlay lock bit
++ *
++ * @param to the overlay option to be locked or unlocked
++ */
++static inline void ToggleOverlayLock(OverlayOption to)
++{
++	ToggleBit(_overlay_lock, to);
++}
++
++/** Set or clear all non-locked overlay options */
++static inline void ResetRestoreAllOverlays()
++{
++	/* if none of the non-locked options are set */
++	if ((_overlay_opt & ~_overlay_lock) == 0) {
++		/* set all non-locked options */
++		_overlay_opt |= GB(~_overlay_lock, 0, OO_END);
++	} else {
++		/* clear all non-locked options */
++		_overlay_opt &= _overlay_lock;
++	}
++
++	MarkWholeScreenDirty();
++}
++
++#endif /* OVERLAY_H */
+\ No newline at end of file
+diff -r ae61687d4f7e src/overlay_cmd.cpp
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/overlay_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
+@@ -0,0 +1,65 @@
++/* $Id$ */
++
++/** @file overlay_cmd.cpp Handling of overlays. */
++
++#include "stdafx.h"
++#include "tile_type.h"
++#include "tile_cmd.h"
++#include "overlay.h"
++#include "station_func.h"
++#include "viewport_func.h"
++#include "overlay_cmd.h"
++
++Overlays* Overlays::instance = NULL;
++
++Overlays* Overlays::Instance() 
++{
++	if (instance == NULL)
++		instance = new Overlays();
++	return instance;
++};
++
++void Overlays::AddStation(const Station* st)
++{
++	this->catchmentOverlay.insert(st);
++};
++
++void Overlays::RemoveStation(const Station* st) 
++{
++	this->catchmentOverlay.erase(st);
++};
++
++void Overlays::ToggleStation(const Station* st) 
++{
++	if(this->HasStation(st)) {
++		this->RemoveStation(st);
++	} else {
++		this->AddStation(st);
++	}
++};
++
++void Overlays::Clear() 
++{
++	this->catchmentOverlay.clear();
++};
++
++bool Overlays::IsTileInCatchmentArea(const TileInfo* ti, CatchmentType type) 
++{
++	for(std::set<const Station *>::iterator iter = catchmentOverlay.begin();iter != catchmentOverlay.end();) {
++		const Station *st = *iter;
++		if(st->IsTileInCatchmentArea(ti, type))
++			return true;
++		iter++;
++	}
++	return false;
++};
++
++bool Overlays::HasStation(const Station* st) 
++{
++	return (this->catchmentOverlay.find(st) != this->catchmentOverlay.end());
++};
++
++Overlays::~Overlays() 
++{
++	this->catchmentOverlay.clear();
++};
+\ No newline at end of file
+diff -r ae61687d4f7e src/overlay_cmd.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/overlay_cmd.h	Sat Jan 03 15:58:51 2015 +0000
+@@ -0,0 +1,38 @@
++/* $Id$ */
++
++/** @file overlay_cmd.h Functions related to overlays. */
++
++#ifndef OVERLAY_CMD_H
++#define OVERLAY_CMD_H
++
++#include "tile_type.h"
++#include "tile_cmd.h"
++#include "station_base.h"
++#include <set>
++
++class Overlays {
++	
++	std::set<const Station *> catchmentOverlay;
++
++protected:
++	static Overlays* instance;
++	
++public:
++	static Overlays* Instance();
++
++	void AddStation(const Station* st);
++
++	void RemoveStation(const Station *st);
++
++	void ToggleStation(const Station* st);
++	
++	void Clear();
++
++	bool IsTileInCatchmentArea(const TileInfo* ti, CatchmentType type);
++
++	bool HasStation(const Station* st);
++
++	virtual ~Overlays();
++};
++
++#endif // OVERLAY_CMD_H
+\ No newline at end of file
+diff -r ae61687d4f7e src/rail_cmd.cpp
+--- a/src/rail_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/rail_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -2354,6 +2354,8 @@
  
  		if (HasBit(_display_opt, DO_FULL_DETAIL)) DrawTrackDetails(ti, rti);
@@ -109,9 +300,9 @@ diff -r fb7b140f2b8e src/rail_cmd.cpp
  		if (HasCatenaryDrawn(GetRailType(ti->tile))) DrawCatenary(ti);
  
  		DrawRailTileSeq(ti, dts, TO_BUILDINGS, relocation, 0, _drawtile_track_palette);
-diff -r fb7b140f2b8e src/road_cmd.cpp
---- a/src/road_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/road_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/road_cmd.cpp
+--- a/src/road_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/road_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -1316,11 +1316,14 @@
  	switch (GetRoadTileType(ti->tile)) {
  		case ROAD_TILE_NORMAL:
@@ -135,9 +326,9 @@ diff -r fb7b140f2b8e src/road_cmd.cpp
  			DrawOrigTileSeq(ti, dts, TO_BUILDINGS, palette);
  			break;
  		}
-diff -r fb7b140f2b8e src/saveload/afterload.cpp
---- a/src/saveload/afterload.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/saveload/afterload.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/saveload/afterload.cpp
+--- a/src/saveload/afterload.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/saveload/afterload.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -881,6 +881,9 @@
  				if (!Station::IsExpected(bst)) break;
  				Station *st = Station::From(bst);
@@ -148,9 +339,9 @@ diff -r fb7b140f2b8e src/saveload/afterload.cpp
  				switch (GetStationType(t)) {
  					case STATION_TRUCK:
  					case STATION_BUS:
-diff -r fb7b140f2b8e src/station.cpp
---- a/src/station.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/station.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/station.cpp
+--- a/src/station.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/station.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -24,6 +24,7 @@
  #include "roadstop_base.h"
  #include "industry.h"
@@ -310,9 +501,9 @@ diff -r fb7b140f2b8e src/station.cpp
 +	}
 +}
 \ No newline at end of file
-diff -r fb7b140f2b8e src/station_base.h
---- a/src/station_base.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/station_base.h	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/station_base.h
+--- a/src/station_base.h	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/station_base.h	Sat Jan 03 15:58:51 2015 +0000
 @@ -19,7 +19,9 @@
  #include "industry_type.h"
  #include "linkgraph/linkgraph_type.h"
@@ -370,9 +561,9 @@ diff -r fb7b140f2b8e src/station_base.h
  	Rect GetCatchmentRect() const;
  
  	/* virtual */ inline bool TileBelongsToRailStation(TileIndex tile) const
-diff -r fb7b140f2b8e src/station_cmd.cpp
---- a/src/station_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/station_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/station_cmd.cpp
+--- a/src/station_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/station_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -42,6 +42,7 @@
  #include "waypoint_base.h"
  #include "waypoint_func.h"
@@ -552,9 +743,9 @@ diff -r fb7b140f2b8e src/station_cmd.cpp
  	st->rect.AfterRemoveTile(st, tile);
  
  	st->UpdateVirtCoord();
-diff -r fb7b140f2b8e src/station_gui.cpp
---- a/src/station_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/station_gui.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/station_gui.cpp
+--- a/src/station_gui.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/station_gui.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -30,6 +30,8 @@
  #include "sortlist_type.h"
  #include "core/geometry_func.hpp"
@@ -618,10 +809,10 @@ diff -r fb7b140f2b8e src/station_gui.cpp
  }
  
  /** Struct containing TileIndex and StationID */
-diff -r fb7b140f2b8e src/town_cmd.cpp
---- a/src/town_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/town_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
-@@ -231,7 +231,9 @@
+diff -r ae61687d4f7e src/town_cmd.cpp
+--- a/src/town_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/town_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
+@@ -251,7 +251,9 @@
  	if (ti->tileh != SLOPE_FLAT) DrawFoundation(ti, FOUNDATION_LEVELED);
  
  	DrawGroundSprite(dcts->ground.sprite, dcts->ground.pal);
@@ -632,7 +823,7 @@ diff -r fb7b140f2b8e src/town_cmd.cpp
  	/* If houses are invisible, do not draw the upper part */
  	if (IsInvisibilitySet(TO_HOUSES)) return;
  
-@@ -250,7 +252,7 @@
+@@ -270,7 +272,7 @@
  
  		if (IsTransparencySet(TO_HOUSES)) return;
  	}
@@ -641,9 +832,9 @@ diff -r fb7b140f2b8e src/town_cmd.cpp
  	{
  		int proc = dcts->draw_proc - 1;
  
-diff -r fb7b140f2b8e src/tree_cmd.cpp
---- a/src/tree_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/tree_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/tree_cmd.cpp
+--- a/src/tree_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/tree_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -470,6 +470,8 @@
  		default: DrawGroundSprite(_clear_land_sprites_snow_desert[GetTreeDensity(ti->tile)] + SlopeToSpriteOffset(ti->tileh), PAL_NONE); break;
  	}
@@ -653,9 +844,9 @@ diff -r fb7b140f2b8e src/tree_cmd.cpp
  	/* Do not draw trees when the invisible trees setting is set */
  	if (IsInvisibilitySet(TO_TREES)) return;
  
-diff -r fb7b140f2b8e src/tunnelbridge_cmd.cpp
---- a/src/tunnelbridge_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/tunnelbridge_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/tunnelbridge_cmd.cpp
+--- a/src/tunnelbridge_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/tunnelbridge_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -1184,6 +1184,8 @@
  				if (surface != 0) DrawGroundSprite(surface + tunnelbridge_direction, PAL_NONE);
  			}
@@ -665,9 +856,9 @@ diff -r fb7b140f2b8e src/tunnelbridge_cmd.cpp
  			/* PBS debugging, draw reserved tracks darker */
  			if (_game_mode != GM_MENU && _settings_client.gui.show_track_reservation && HasTunnelBridgeReservation(ti->tile)) {
  				DrawGroundSprite(DiagDirToAxis(tunnelbridge_direction) == AXIS_X ? rti->base_sprites.single_x : rti->base_sprites.single_y, PALETTE_CRASH);
-diff -r fb7b140f2b8e src/viewport.cpp
---- a/src/viewport.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/viewport.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/viewport.cpp
+--- a/src/viewport.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/viewport.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -81,6 +81,8 @@
  #include "blitter/factory.hpp"
  #include "strings_func.h"
@@ -677,7 +868,7 @@ diff -r fb7b140f2b8e src/viewport.cpp
  #include "vehicle_func.h"
  #include "company_func.h"
  #include "waypoint_func.h"
-@@ -3531,6 +3533,17 @@
+@@ -3530,6 +3532,17 @@
  	return p;
  }
  
@@ -695,9 +886,9 @@ diff -r fb7b140f2b8e src/viewport.cpp
  /** Helper class for getting the best sprite sorter. */
  struct ViewportSSCSS {
  	VpSorterChecker fct_checker; ///< The check function.
-diff -r fb7b140f2b8e src/viewport_func.h
---- a/src/viewport_func.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/viewport_func.h	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/viewport_func.h
+--- a/src/viewport_func.h	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/viewport_func.h	Sat Jan 03 15:58:51 2015 +0000
 @@ -17,6 +17,7 @@
  #include "window_type.h"
  #include "tile_type.h"
@@ -715,9 +906,9 @@ diff -r fb7b140f2b8e src/viewport_func.h
 +
 +#endif /* VIEWPORT_FUNC_H */
 \ No newline at end of file
-diff -r fb7b140f2b8e src/water_cmd.cpp
---- a/src/water_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/water_cmd.cpp	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/water_cmd.cpp
+--- a/src/water_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/water_cmd.cpp	Sat Jan 03 15:58:51 2015 +0000
 @@ -865,6 +865,7 @@
  			DrawWaterDepot(ti);
  			break;
@@ -726,9 +917,9 @@ diff -r fb7b140f2b8e src/water_cmd.cpp
  }
  
  void DrawShipDepotSprite(int x, int y, Axis axis, DepotPart part)
-diff -r fb7b140f2b8e src/widgets/station_widget.h
---- a/src/widgets/station_widget.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/widgets/station_widget.h	Mon Dec 29 00:02:42 2014 +0000
+diff -r ae61687d4f7e src/widgets/station_widget.h
+--- a/src/widgets/station_widget.h	Sat Jan 03 15:58:48 2015 +0000
++++ b/src/widgets/station_widget.h	Sat Jan 03 15:58:51 2015 +0000
 @@ -23,6 +23,7 @@
  	WID_SV_SCROLLBAR,          ///< Scrollbar.
  	WID_SV_ACCEPT_RATING_LIST, ///< List of accepted cargoes / rating of cargoes.

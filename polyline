@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent 06e8776d1dc695e2432370572e119a19257056bd
+# Parent 34f2d55d5db8ead2b043cb9fd0799f5c231df060
 
-diff -r 06e8776d1dc6 src/bridge_gui.cpp
---- a/src/bridge_gui.cpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/bridge_gui.cpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/bridge_gui.cpp
+--- a/src/bridge_gui.cpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/bridge_gui.cpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -24,6 +24,7 @@
  #include "cmd_helper.h"
  #include "tunnelbridge_map.h"
@@ -21,9 +21,9 @@ diff -r 06e8776d1dc6 src/bridge_gui.cpp
  }
  
  /** Window class for handling the bridge-build GUI. */
-diff -r 06e8776d1dc6 src/lang/english.txt
---- a/src/lang/english.txt	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/lang/english.txt	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:59:01 2015 +0000
 @@ -2319,6 +2319,7 @@
  
  STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_TRACK                   :{BLACK}Build railway track. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
@@ -32,9 +32,9 @@ diff -r 06e8776d1dc6 src/lang/english.txt
  STR_RAIL_TOOLBAR_TOOLTIP_BUILD_TRAIN_DEPOT_FOR_BUILDING         :{BLACK}Build train depot (for buying and servicing trains). Shift toggles building/showing cost estimate
  STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_TO_WAYPOINT               :{BLACK}Convert rail to waypoint. Ctrl enables joining waypoints. Shift toggles building/showing cost estimate
  STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_STATION                 :{BLACK}Build railway station. Ctrl enables joining stations. Shift toggles building/showing cost estimate
-diff -r 06e8776d1dc6 src/main_gui.cpp
---- a/src/main_gui.cpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/main_gui.cpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/main_gui.cpp
+--- a/src/main_gui.cpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/main_gui.cpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -107,7 +107,7 @@
  	if (_settings_client.sound.click_beep) SndPlayFx(SND_15_BEEP);
  	w->SetDirty();
@@ -44,9 +44,9 @@ diff -r 06e8776d1dc6 src/main_gui.cpp
  		ResetObjectToPlace();
  		return false;
  	}
-diff -r 06e8776d1dc6 src/misc.cpp
---- a/src/misc.cpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/misc.cpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/misc.cpp
+--- a/src/misc.cpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/misc.cpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -110,6 +110,7 @@
  	InitializeEconomy();
  
@@ -55,9 +55,9 @@ diff -r 06e8776d1dc6 src/misc.cpp
  
  	GamelogReset();
  	GamelogStartAction(GLAT_START);
-diff -r 06e8776d1dc6 src/rail_cmd.cpp
---- a/src/rail_cmd.cpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/rail_cmd.cpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/rail_cmd.cpp
+--- a/src/rail_cmd.cpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/rail_cmd.cpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -44,6 +44,7 @@
  typedef SmallVector<Train *, 16> TrainList;
  
@@ -82,9 +82,9 @@ diff -r 06e8776d1dc6 src/rail_cmd.cpp
  	return cost;
  }
  
-diff -r 06e8776d1dc6 src/rail_gui.cpp
---- a/src/rail_gui.cpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/rail_gui.cpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/rail_gui.cpp
+--- a/src/rail_gui.cpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/rail_gui.cpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -52,6 +52,8 @@
  static SignalVariant _cur_signal_variant;    ///< set the signal variant (for signal GUI)
  static SignalType _cur_signal_type;          ///< set the signal type (for signal GUI)
@@ -233,9 +233,9 @@ diff -r 06e8776d1dc6 src/rail_gui.cpp
  
  		NWidget(WWT_PANEL, COLOUR_DARK_GREEN), SetMinimalSize(4, 22), SetDataTip(0x0, STR_NULL), EndContainer(),
  
-diff -r 06e8776d1dc6 src/script/api/game/game_window.hpp.sq
---- a/src/script/api/game/game_window.hpp.sq	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/script/api/game/game_window.hpp.sq	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/script/api/game/game_window.hpp.sq
+--- a/src/script/api/game/game_window.hpp.sq	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/script/api/game/game_window.hpp.sq	Sat Jan 03 15:59:01 2015 +0000
 @@ -904,6 +904,7 @@
  	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_RAT_BUILD_EW,                          "WID_RAT_BUILD_EW");
  	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_RAT_BUILD_Y,                           "WID_RAT_BUILD_Y");
@@ -244,9 +244,9 @@ diff -r 06e8776d1dc6 src/script/api/game/game_window.hpp.sq
  	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_RAT_DEMOLISH,                          "WID_RAT_DEMOLISH");
  	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_RAT_BUILD_DEPOT,                       "WID_RAT_BUILD_DEPOT");
  	SQGSWindow.DefSQConst(engine, ScriptWindow::WID_RAT_BUILD_WAYPOINT,                    "WID_RAT_BUILD_WAYPOINT");
-diff -r 06e8776d1dc6 src/script/api/script_window.hpp
---- a/src/script/api/script_window.hpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/script/api/script_window.hpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/script/api/script_window.hpp
+--- a/src/script/api/script_window.hpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/script/api/script_window.hpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -1982,6 +1982,7 @@
  		WID_RAT_BUILD_EW                             = ::WID_RAT_BUILD_EW,                             ///< Build rail along the game view X axis.
  		WID_RAT_BUILD_Y                              = ::WID_RAT_BUILD_Y,                              ///< Build rail along the game grid Y axis.
@@ -255,9 +255,9 @@ diff -r 06e8776d1dc6 src/script/api/script_window.hpp
  		WID_RAT_DEMOLISH                             = ::WID_RAT_DEMOLISH,                             ///< Destroy something with dynamite!
  		WID_RAT_BUILD_DEPOT                          = ::WID_RAT_BUILD_DEPOT,                          ///< Build a depot.
  		WID_RAT_BUILD_WAYPOINT                       = ::WID_RAT_BUILD_WAYPOINT,                       ///< Build a waypoint.
-diff -r 06e8776d1dc6 src/tilehighlight_func.h
---- a/src/tilehighlight_func.h	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/tilehighlight_func.h	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/tilehighlight_func.h
+--- a/src/tilehighlight_func.h	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/tilehighlight_func.h	Sat Jan 03 15:59:01 2015 +0000
 @@ -14,6 +14,7 @@
  
  #include "gfx_type.h"
@@ -276,9 +276,9 @@ diff -r 06e8776d1dc6 src/tilehighlight_func.h
  extern TileHighlightData _thd;
  
  #endif /* TILEHIGHLIGHT_FUNC_H */
-diff -r 06e8776d1dc6 src/tilehighlight_type.h
---- a/src/tilehighlight_type.h	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/tilehighlight_type.h	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/tilehighlight_type.h
+--- a/src/tilehighlight_type.h	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/tilehighlight_type.h	Sat Jan 03 15:59:01 2015 +0000
 @@ -28,6 +28,7 @@
  	HT_RAIL      = 0x080, ///< autorail (one piece), lower bits: direction
  	HT_VEHICLE   = 0x100, ///< vehicle is accepted as target as well (bitmask)
@@ -303,9 +303,9 @@ diff -r 06e8776d1dc6 src/tilehighlight_type.h
  	byte sizelimit;      ///< Whether the selection is limited in length, and what the maximum length is.
  
  	HighLightStyle drawstyle;      ///< Lower bits 0-3 are reserved for detailed highlight information.
-diff -r 06e8776d1dc6 src/viewport.cpp
---- a/src/viewport.cpp	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/viewport.cpp	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/viewport.cpp
+--- a/src/viewport.cpp	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/viewport.cpp	Sat Jan 03 15:59:01 2015 +0000
 @@ -69,6 +69,8 @@
   */
  
@@ -587,7 +587,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  	}
  }
  
-@@ -2268,7 +2286,7 @@
+@@ -2266,7 +2284,7 @@
  		int x_start = _thd.pos.x;
  		int y_start = _thd.pos.y;
  
@@ -596,7 +596,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  			x_size  += _thd.outersize.x;
  			x_start += _thd.offs.x;
  			y_size  += _thd.outersize.y;
-@@ -2627,8 +2645,8 @@
+@@ -2625,8 +2643,8 @@
  
  void SetTileSelectBigSize(int ox, int oy, int sx, int sy)
  {
@@ -607,7 +607,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  	_thd.new_outersize.x = sx * TILE_SIZE;
  	_thd.new_outersize.y = sy * TILE_SIZE;
  }
-@@ -2668,7 +2686,36 @@
+@@ -2666,7 +2684,36 @@
  	return FindWindowById(this->window_class, this->window_number);
  }
  
@@ -645,7 +645,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  
  /**
   * Updates tile highlighting for all cases.
-@@ -2708,6 +2755,9 @@
+@@ -2706,6 +2753,9 @@
  				_thd.new_size.x += TILE_SIZE;
  				_thd.new_size.y += TILE_SIZE;
  			}
@@ -655,7 +655,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  			new_drawstyle = _thd.next_drawstyle;
  		}
  	} else if ((_thd.place_mode & HT_DRAG_MASK) != HT_NONE) {
-@@ -2725,10 +2775,39 @@
+@@ -2723,10 +2773,39 @@
  					y1 += TILE_SIZE / 2;
  					break;
  				case HT_RAIL:
@@ -698,7 +698,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  					switch (_thd.place_mode & HT_DIR_MASK) {
  						case HT_DIR_X: new_drawstyle = HT_LINE | HT_DIR_X; break;
  						case HT_DIR_Y: new_drawstyle = HT_LINE | HT_DIR_Y; break;
-@@ -2747,6 +2826,8 @@
+@@ -2745,6 +2824,8 @@
  					}
  					_thd.selstart.x = x1 & ~TILE_UNIT_MASK;
  					_thd.selstart.y = y1 & ~TILE_UNIT_MASK;
@@ -707,7 +707,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  					break;
  				default:
  					NOT_REACHED();
-@@ -2761,6 +2842,7 @@
+@@ -2759,6 +2840,7 @@
  	if (_thd.drawstyle != new_drawstyle ||
  			_thd.pos.x != _thd.new_pos.x || _thd.pos.y != _thd.new_pos.y ||
  			_thd.size.x != _thd.new_size.x || _thd.size.y != _thd.new_size.y ||
@@ -715,7 +715,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  			_thd.outersize.x != _thd.new_outersize.x ||
  			_thd.outersize.y != _thd.new_outersize.y ||
  			_thd.diagonal    != new_diagonal) {
-@@ -2770,6 +2852,7 @@
+@@ -2768,6 +2850,7 @@
  		_thd.drawstyle = new_drawstyle;
  		_thd.pos = _thd.new_pos;
  		_thd.size = _thd.new_size;
@@ -723,7 +723,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  		_thd.outersize = _thd.new_outersize;
  		_thd.diagonal = new_diagonal;
  		_thd.dirty = 0xff;
-@@ -2819,6 +2902,7 @@
+@@ -2817,6 +2900,7 @@
  	} else if (_thd.place_mode & (HT_RAIL | HT_LINE)) {
  		_thd.place_mode = HT_SPECIAL | others;
  		_thd.next_drawstyle = _thd.drawstyle | others;
@@ -731,7 +731,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  	} else {
  		_thd.place_mode = HT_SPECIAL | others;
  		_thd.next_drawstyle = HT_POINT | others;
-@@ -3010,7 +3094,31 @@
+@@ -3008,7 +3092,31 @@
  	return (int)(h1 - h0) * TILE_HEIGHT_STEP;
  }
  
@@ -764,7 +764,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  
  /**
   * Check for underflowing the map.
-@@ -3041,6 +3149,162 @@
+@@ -3039,6 +3147,162 @@
  	test = max;
  }
  
@@ -927,7 +927,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  /** while dragging */
  static void CalcRaildirsDrawstyle(int x, int y, int method)
  {
-@@ -3227,32 +3491,78 @@
+@@ -3225,32 +3489,78 @@
  		}
  	}
  
@@ -1029,7 +1029,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  }
  
  /**
-@@ -3272,6 +3582,12 @@
+@@ -3270,6 +3580,12 @@
  		return;
  	}
  
@@ -1042,7 +1042,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  	/* Special handling of drag in any (8-way) direction */
  	if (method & (VPM_RAILDIRS | VPM_SIGNALDIRS)) {
  		_thd.selend.x = x;
-@@ -3324,27 +3640,12 @@
+@@ -3322,27 +3638,12 @@
  				x = sx + Clamp(x - sx, -limit, limit);
  				y = sy + Clamp(y - sy, -limit, limit);
  			}
@@ -1076,7 +1076,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  			break;
  
  		case VPM_A_B_LINE: { // drag an A to B line
-@@ -3479,11 +3780,10 @@
+@@ -3477,11 +3778,10 @@
  		return ES_HANDLED;
  	}
  
@@ -1092,7 +1092,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  
  	/* mouse button released..
  	 * keep the selected tool, but reset it to the original mode. */
-@@ -3494,7 +3794,7 @@
+@@ -3492,7 +3792,7 @@
  	} else if (_thd.select_method & VPM_SIGNALDIRS) {
  		_thd.place_mode = HT_RECT | others;
  	} else if (_thd.select_method & VPM_RAILDIRS) {
@@ -1101,7 +1101,7 @@ diff -r 06e8776d1dc6 src/viewport.cpp
  	} else {
  		_thd.place_mode = HT_POINT | others;
  	}
-@@ -3609,3 +3909,66 @@
+@@ -3607,3 +3907,66 @@
  	}
  	assert(_vp_sprite_sorter != NULL);
  }
@@ -1168,9 +1168,9 @@ diff -r 06e8776d1dc6 src/viewport.cpp
 +{
 +	_rail_snap_points.Clear();
 +}
-diff -r 06e8776d1dc6 src/widgets/rail_widget.h
---- a/src/widgets/rail_widget.h	Mon Dec 29 16:26:05 2014 +0000
-+++ b/src/widgets/rail_widget.h	Mon Dec 29 16:26:13 2014 +0000
+diff -r 34f2d55d5db8 src/widgets/rail_widget.h
+--- a/src/widgets/rail_widget.h	Sat Jan 03 15:58:59 2015 +0000
++++ b/src/widgets/rail_widget.h	Sat Jan 03 15:59:01 2015 +0000
 @@ -21,6 +21,7 @@
  	WID_RAT_BUILD_EW,       ///< Build rail along the game view X axis.
  	WID_RAT_BUILD_Y,        ///< Build rail along the game grid Y axis.

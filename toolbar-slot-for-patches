@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent fb7b140f2b8ea48eebea7915b57a57e5143680c4
+# Parent 771738183e6a8306c36454127f4f7609ae161bc4
 
-diff -r fb7b140f2b8e src/lang/english.txt
---- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/lang/english.txt	Mon Dec 29 18:54:18 2014 +0000
+diff -r 771738183e6a src/lang/english.txt
+--- a/src/lang/english.txt	Fri Jan 02 19:50:43 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:58:35 2015 +0000
 @@ -4968,3 +4968,6 @@
  STR_SHIP                                                        :{BLACK}{SHIP}
  
@@ -11,9 +11,9 @@ diff -r fb7b140f2b8e src/lang/english.txt
 +
 +# Patches Menu
 +STR_PATCHES_DESC                                                :
-diff -r fb7b140f2b8e src/toolbar_gui.cpp
---- a/src/toolbar_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/toolbar_gui.cpp	Mon Dec 29 18:54:18 2014 +0000
+diff -r 771738183e6a src/toolbar_gui.cpp
+--- a/src/toolbar_gui.cpp	Fri Jan 02 19:50:43 2015 +0000
++++ b/src/toolbar_gui.cpp	Sat Jan 03 15:58:35 2015 +0000
 @@ -557,7 +557,25 @@
  	ShowCompanyStations((CompanyID)index);
  	return CBF_NONE;
@@ -144,9 +144,9 @@ diff -r fb7b140f2b8e src/toolbar_gui.cpp
  		}
  		hor->Add(new NWidgetLeaf(i == WID_TN_SAVE ? WWT_IMGBTN_2 : WWT_IMGBTN, COLOUR_GREY, i, toolbar_button_sprites[i], STR_TOOLBAR_TOOLTIP_PAUSE_GAME + i));
  	}
-diff -r fb7b140f2b8e src/widgets/toolbar_widget.h
---- a/src/widgets/toolbar_widget.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/widgets/toolbar_widget.h	Mon Dec 29 18:54:18 2014 +0000
+diff -r 771738183e6a src/widgets/toolbar_widget.h
+--- a/src/widgets/toolbar_widget.h	Fri Jan 02 19:50:43 2015 +0000
++++ b/src/widgets/toolbar_widget.h	Sat Jan 03 15:58:35 2015 +0000
 @@ -22,6 +22,7 @@
  	WID_TN_TOWNS,         ///< Town menu.
  	WID_TN_SUBSIDIES,     ///< Subsidy menu.

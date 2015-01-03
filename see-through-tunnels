@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent fb7b140f2b8ea48eebea7915b57a57e5143680c4
+# Parent 2ae9fd14b957028308e856351ad2bbc670c4053d
 
-diff -r fb7b140f2b8e src/lang/english.txt
---- a/src/lang/english.txt	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/lang/english.txt	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:58:43 2015 +0000
 @@ -2279,6 +2279,7 @@
  STR_TRANSPARENT_STRUCTURES_TOOLTIP                              :{BLACK}Toggle transparency for structures like lighthouses and antennas. Ctrl+Click to lock
  STR_TRANSPARENT_CATENARY_TOOLTIP                                :{BLACK}Toggle transparency for catenary. Ctrl+Click to lock
@@ -12,9 +12,9 @@ diff -r fb7b140f2b8e src/lang/english.txt
  STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Set objects invisible instead of transparent
  
  # Linkgraph legend window
-diff -r fb7b140f2b8e src/lang/russian.txt
---- a/src/lang/russian.txt	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/lang/russian.txt	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/lang/russian.txt
+--- a/src/lang/russian.txt	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/lang/russian.txt	Sat Jan 03 15:58:43 2015 +0000
 @@ -2225,6 +2225,7 @@
  
  # Network company list added strings
@@ -23,21 +23,21 @@ diff -r fb7b140f2b8e src/lang/russian.txt
  STR_NETWORK_COMPANY_LIST_SPECTATE                               :{WHITE}Наблюдать
  STR_NETWORK_COMPANY_LIST_NEW_COMPANY                            :{WHITE}Новая компания
  
-diff -r fb7b140f2b8e src/roadveh_cmd.cpp
---- a/src/roadveh_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/roadveh_cmd.cpp	Mon Dec 29 01:10:36 2014 +0000
-@@ -1154,7 +1154,7 @@
+diff -r 2ae9fd14b957 src/roadveh_cmd.cpp
+--- a/src/roadveh_cmd.cpp	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/roadveh_cmd.cpp	Sat Jan 03 15:58:43 2015 +0000
+@@ -1157,7 +1157,7 @@
  		v->x_pos = gp.x;
  		v->y_pos = gp.y;
  		v->UpdatePosition();
 -		if ((v->vehstatus & VS_HIDDEN) == 0) v->Vehicle::UpdateViewport(true);
-+		if (v->IsDrawn()) VehicleUpdateViewport(v, true);
++		if (v->IsDrawn()) v->Vehicle::UpdateViewport( true);
  		return true;
  	}
  
-diff -r fb7b140f2b8e src/table/misc_settings.ini
---- a/src/table/misc_settings.ini	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/table/misc_settings.ini	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/table/misc_settings.ini
+--- a/src/table/misc_settings.ini	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/table/misc_settings.ini	Sat Jan 03 15:58:43 2015 +0000
 @@ -255,7 +255,7 @@
  var      = _transparency_opt
  def      = 0
@@ -56,15 +56,15 @@ diff -r fb7b140f2b8e src/table/misc_settings.ini
  cat      = SC_BASIC
  
  [SDTG_VAR]
-diff -r fb7b140f2b8e src/train_cmd.cpp
---- a/src/train_cmd.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/train_cmd.cpp	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/train_cmd.cpp
+--- a/src/train_cmd.cpp	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/train_cmd.cpp	Sat Jan 03 15:58:43 2015 +0000
 @@ -3335,7 +3335,7 @@
  				v->x_pos = gp.x;
  				v->y_pos = gp.y;
  				v->UpdatePosition();
 -				if ((v->vehstatus & VS_HIDDEN) == 0) v->Vehicle::UpdateViewport(true);
-+				if (v->IsDrawn()) VehicleUpdateViewport(v, true);
++				if (v->IsDrawn()) v->Vehicle::UpdateViewport( true);
  				continue;
  			}
  		}
@@ -77,9 +77,9 @@ diff -r fb7b140f2b8e src/train_cmd.cpp
  
  		u->UpdateViewport(false, false);
  	}
-diff -r fb7b140f2b8e src/transparency.h
---- a/src/transparency.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/transparency.h	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/transparency.h
+--- a/src/transparency.h	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/transparency.h	Sat Jan 03 15:58:43 2015 +0000
 @@ -31,6 +31,7 @@
  	TO_STRUCTURES, ///< other objects such as transmitters and lighthouses
  	TO_CATENARY,   ///< catenary
@@ -88,9 +88,9 @@ diff -r fb7b140f2b8e src/transparency.h
  	TO_END,
  	TO_INVALID,    ///< Invalid transparency option
  };
-diff -r fb7b140f2b8e src/transparency_gui.cpp
---- a/src/transparency_gui.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/transparency_gui.cpp	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/transparency_gui.cpp
+--- a/src/transparency_gui.cpp	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/transparency_gui.cpp	Sat Jan 03 15:58:43 2015 +0000
 @@ -52,6 +52,7 @@
  			case WID_TT_BRIDGES:
  			case WID_TT_STRUCTURES:
@@ -124,9 +124,9 @@ diff -r fb7b140f2b8e src/transparency_gui.cpp
  void ShowTransparencyToolbar()
  {
  	AllocateWindowDescFront<TransparenciesWindow>(&_transparency_desc, 0);
-diff -r fb7b140f2b8e src/vehicle.cpp
---- a/src/vehicle.cpp	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/vehicle.cpp	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/vehicle.cpp
+--- a/src/vehicle.cpp	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/vehicle.cpp	Sat Jan 03 15:58:43 2015 +0000
 @@ -221,6 +221,14 @@
  	return RandomRange(pass + 1); // Randomise deceased passengers.
  }
@@ -147,7 +147,7 @@ diff -r fb7b140f2b8e src/vehicle.cpp
  	/* sometimes, eg. for disaster vehicles, when company bankrupts, when removing crashed/flooded vehicles,
  	 * it may happen that vehicle chain is deleted when visible */
 -	if (!(this->vehstatus & VS_HIDDEN)) this->MarkAllViewportsDirty();
-+	if (this->IsDrawn()) MarkSingleVehicleDirty(this);
++	if (this->IsDrawn()) this->MarkAllViewportsDirty();
  
  	Vehicle *v = this->Next();
  	this->SetNext(NULL);
@@ -178,9 +178,9 @@ diff -r fb7b140f2b8e src/vehicle.cpp
  				x >= v->coord.left && x <= v->coord.right &&
  				y >= v->coord.top && y <= v->coord.bottom) {
  
-diff -r fb7b140f2b8e src/vehicle_base.h
---- a/src/vehicle_base.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/vehicle_base.h	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/vehicle_base.h
+--- a/src/vehicle_base.h	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/vehicle_base.h	Sat Jan 03 15:58:43 2015 +0000
 @@ -295,6 +295,12 @@
  	uint GetConsistTotalCapacity() const;
  
@@ -194,9 +194,9 @@ diff -r fb7b140f2b8e src/vehicle_base.h
  	 * Marks the vehicles to be redrawn and updates cached variables
  	 *
  	 * This method marks the area of the vehicle on the screen as dirty.
-diff -r fb7b140f2b8e src/widgets/transparency_widget.h
---- a/src/widgets/transparency_widget.h	Sat Dec 27 17:45:27 2014 +0000
-+++ b/src/widgets/transparency_widget.h	Mon Dec 29 01:10:36 2014 +0000
+diff -r 2ae9fd14b957 src/widgets/transparency_widget.h
+--- a/src/widgets/transparency_widget.h	Sat Jan 03 15:58:40 2015 +0000
++++ b/src/widgets/transparency_widget.h	Sat Jan 03 15:58:43 2015 +0000
 @@ -25,6 +25,7 @@
  	WID_TT_STRUCTURES,               ///< Object structure transparency toggle button.
  	WID_TT_CATENARY,                 ///< Catenary transparency toggle button.

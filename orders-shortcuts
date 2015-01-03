@@ -1,0 +1,408 @@
+# HG changeset patch
+# Parent 69f04e3ec2608ce52ae61ae266b041c353e24c2b
+
+diff -r 69f04e3ec260 src/gfx.cpp
+--- a/src/gfx.cpp	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/gfx.cpp	Sat Jan 03 15:59:06 2015 +0000
+@@ -33,6 +33,7 @@
+ byte _support8bpp;
+ CursorVars _cursor;
+ bool _ctrl_pressed;   ///< Is Ctrl pressed?
++bool _alt_pressed;    ///< Is Alt pressed?
+ bool _shift_pressed;  ///< Is Shift pressed?
+ byte _fast_forward;
+ bool _left_button_down;     ///< Is left mouse button pressed?
+diff -r 69f04e3ec260 src/gfx_func.h
+--- a/src/gfx_func.h	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/gfx_func.h	Sat Jan 03 15:59:06 2015 +0000
+@@ -55,6 +55,7 @@
+ extern byte _support8bpp;
+ extern CursorVars _cursor;
+ extern bool _ctrl_pressed;   ///< Is Ctrl pressed?
++extern bool _alt_pressed;    ///< Is Alt pressed?
+ extern bool _shift_pressed;  ///< Is Shift pressed?
+ extern byte _fast_forward;
+ 
+diff -r 69f04e3ec260 src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:59:06 2015 +0000
+@@ -1683,6 +1683,7 @@
+ STR_CONFIG_SETTING_VEHICLES                                     :{ORANGE}Vehicles
+ STR_CONFIG_SETTING_VEHICLES_PHYSICS                             :{ORANGE}Physics
+ STR_CONFIG_SETTING_VEHICLES_ROUTING                             :{ORANGE}Routing
++STR_CONFIG_SETTING_VEHICLES_ORDERS                              :{ORANGE}Order's Shortcuts
+ STR_CONFIG_SETTING_LIMITATIONS                                  :{ORANGE}Limitations
+ STR_CONFIG_SETTING_ACCIDENTS                                    :{ORANGE}Disasters / Accidents
+ STR_CONFIG_SETTING_GENWORLD                                     :{ORANGE}World generation
+@@ -4996,7 +4997,26 @@
+ # Patches Menu
+ STR_WATCH_WINDOW                                                :Watch Company
+ 
+-#watch window
++# watch window
+ STR_WATCH_WINDOW_TITLE                                          :{WHITE}Watching {RAW_STRING}.
+ STR_WATCH_CLICK_TO_WATCH_COMPANY                                :{BLACK}Click here to watch company building
+ STR_WATCH_CLICK_NEW_WINDOW                                      :{BLACK}Click here to open new watching window
++
++# Orders Shortcuts
++STR_CONFIG_SETTING_CTRL_ENABLE_CTRLCLICK_STARTSTOP              :Allow ctrlleft-click vehicles to start or stop them: {STRING2}
++STR_CONFIG_SETTING_AUTOSET_NOLOAD_ON_TRANSFER                   :"Transfer" orders are "No Loading" by default: {STRING2}
++STR_CONFIG_SETTING_AUTOSET_NOLOAD_ON_UNLOAD                     :"Unload all" orders are "No Loading" by default: {STRING2}
++
++STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_CTRLLCLICK                 :ctrl+left-click: {STRING2}
++STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_CTRLSHIFTLCLICK            :ctrl+shiftleft-click: {STRING2}
++STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_SHIFTLCLICK                :shift+left-click: {STRING2}
++STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_ALTLCLICK                  :alt+left-click: {STRING2}
++STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_ALTSHIFTCLICK              :alt+shift+left-click: {STRING2}
++STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_CTRLALTLCLICK              :ctrl+alt+left-click: {STRING2}
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE                      :do nothing
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_FULL_LOAD_ANY             :Full load any cargo
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_TRANSFER_CARGO            :Transfer cargo
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_UNLOAD_ALL                :Force unload of all cargo
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_FEEDERLOAD                :Feeder Load (replace first order)
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_FEEDERDROP                :Feeder Unload (replace last order)
++STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NO_LOAD                   :Do not load any cargo
+diff -r 69f04e3ec260 src/order_gui.cpp
+--- a/src/order_gui.cpp	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/order_gui.cpp	Sat Jan 03 15:59:06 2015 +0000
+@@ -171,6 +171,79 @@
+ 	INVALID_STRING_ID,
+ };
+ 
++struct OrdersFromSettings
++{
++	enum OrderUnloadFlags unload;
++	enum OrderLoadFlags   load;
++};
++ 
++typedef enum {
++	GOFS_NONE = 0,
++	GOFS_FULL,
++	GOFS_XFER,
++	GOFS_UNLOAD,
++	GOFS_FEEDLOAD,
++	GOFS_FEEDUNLOAD,
++	GOFS_NOLOAD
++} GetOrderFromSettingsTypes;
++
++static enum {
++	GOFS_FEEDER_NULL,
++	GOFS_FEEDER_LOAD,
++	GOFS_FEEDER_UNLOAD
++} gofsfeeder_ordermod = GOFS_FEEDER_NULL;
++
++#define GOFSFEEDER_ORDERMOD_RESET gofsfeeder_ordermod = GOFS_FEEDER_NULL
++
++
++/* fetch and compute orders set from settings */
++
++static void GetOrdersFromSettings(const Vehicle *v, uint8 setting, struct OrdersFromSettings *rv)
++{
++	rv->load = (enum OrderLoadFlags)-1;
++	rv->unload = (enum OrderUnloadFlags)-1;
++
++	switch(setting) {
++
++	case GOFS_FEEDLOAD:
++		if (v->GetNumOrders()) gofsfeeder_ordermod = GOFS_FEEDER_LOAD;
++		rv->unload = OUFB_NO_UNLOAD;
++		rv->load = OLF_FULL_LOAD_ANY;
++		break;
++	case GOFS_FULL:
++		rv->load = OLF_FULL_LOAD_ANY;
++		break;
++
++	case GOFS_UNLOAD:
++		rv->unload = OUFB_UNLOAD;
++		if (_settings_client.gui.auto_noload_on_unloadall)
++			rv->load = OLFB_NO_LOAD;
++		break;
++
++	case GOFS_FEEDUNLOAD:
++		if (v->GetNumOrders()) gofsfeeder_ordermod = GOFS_FEEDER_UNLOAD;
++		rv->unload = OUFB_TRANSFER;
++		rv->load = OLFB_NO_LOAD;
++		break;
++
++	case GOFS_XFER:
++		rv->unload = OUFB_TRANSFER;
++		if (_settings_client.gui.auto_noload_on_transfer)
++			rv->load = OLFB_NO_LOAD;
++		break;
++
++	case GOFS_NOLOAD:
++		rv->load = OLFB_NO_LOAD;
++		break;
++
++	case GOFS_NONE:
++		break;
++
++	default: NOT_REACHED();
++	}
++}
++
++
+ extern uint ConvertSpeedToDisplaySpeed(uint speed);
+ extern uint ConvertDisplaySpeedToSpeed(uint speed);
+ 
+@@ -400,8 +473,35 @@
+ 			(facil = FACIL_BUS_STOP, v->type == VEH_ROAD && RoadVehicle::From(v)->IsBus()) ||
+ 			(facil = FACIL_TRUCK_STOP, 1);
+ 			if (st->facilities & facil) {
++				uint8 os = 0xff;
+ 				order.MakeGoToStation(st_index);
+-				if (_ctrl_pressed) order.SetLoadType(OLF_FULL_LOAD_ANY);
++				if (_ctrl_pressed) {
++					if (_shift_pressed)
++						os = _settings_client.gui.goto_shortcuts_ctrlshift_lclick;
++					else if (_alt_pressed)
++						os = _settings_client.gui.goto_shortcuts_altctrl_lclick;
++					else
++						os = _settings_client.gui.goto_shortcuts_ctrl_lclick;
++				}
++				else if (_shift_pressed) {
++					if (_alt_pressed)
++						os = _settings_client.gui.goto_shortcuts_altshift_lclick;
++					else
++					{
++						os = _settings_client.gui.goto_shortcuts_shift_lclick;
++					}
++				}
++				else if (_alt_pressed)
++					os = _settings_client.gui.goto_shortcuts_alt_lclick;
++
++				if (os != 0xff) {
++					struct OrdersFromSettings ofs;
++					GetOrdersFromSettings(v, os, &ofs);
++					if (ofs.load != (enum OrderLoadFlags)-1)
++						order.SetLoadType(ofs.load);
++					if (ofs.unload != (enum OrderUnloadFlags)-1)
++					order.SetUnloadType(ofs.unload);
++				}
+ 				if (_settings_client.gui.new_nonstop && v->IsGroundVehicle()) order.SetNonStopType(ONSF_NO_STOP_AT_INTERMEDIATE_STATIONS);
+ 				order.SetStopLocation(v->type == VEH_TRAIN ? (OrderStopLocation)(_settings_client.gui.stop_location) : OSL_PLATFORM_FAR_END);
+ 				return order;
+@@ -634,9 +734,14 @@
+ 		}
+ 
+ 		DoCommandP(this->vehicle->tile, this->vehicle->index + (sel_ord << 20), MOF_UNLOAD | (unload_type << 4), CMD_MODIFY_ORDER | CMD_MSG(STR_ERROR_CAN_T_MODIFY_THIS_ORDER));
+-
++		bool set_no_load = false;
++		if (unload_type == OUFB_TRANSFER)
++			set_no_load = _settings_client.gui.auto_noload_on_transfer;
++		else if (unload_type == OUFB_UNLOAD)
++			set_no_load = _settings_client.gui.auto_noload_on_unloadall;
++			
+ 		/* Transfer orders with leave empty as default */
+-		if (unload_type == OUFB_TRANSFER) {
++		if (set_no_load) {
+ 			DoCommandP(this->vehicle->tile, this->vehicle->index + (sel_ord << 20), MOF_LOAD | (OLFB_NO_LOAD << 4), CMD_MODIFY_ORDER);
+ 			this->SetWidgetDirty(WID_O_FULL_LOAD);
+ 		}
+@@ -1447,8 +1552,22 @@
+ 			const Order cmd = GetOrderCmdFromTile(this->vehicle, tile);
+ 			if (cmd.IsType(OT_NOTHING)) return;
+ 
+-			if (DoCommandP(this->vehicle->tile, this->vehicle->index + (this->OrderGetSel() << 20), cmd.Pack(), CMD_INSERT_ORDER | CMD_MSG(STR_ERROR_CAN_T_INSERT_NEW_ORDER))) {
+-				/* With quick goto the Go To button stays active */
++			if (gofsfeeder_ordermod != GOFS_FEEDER_NULL) {
++				if (gofsfeeder_ordermod == GOFS_FEEDER_LOAD) {
++					if (DoCommandP(this->vehicle->tile, this->vehicle->index + ((1) << 20), cmd.Pack(), CMD_INSERT_ORDER | CMD_MSG(STR_ERROR_CAN_T_INSERT_NEW_ORDER))) {
++						DoCommandP(this->vehicle->tile, this->vehicle->index,  0, CMD_DELETE_ORDER | CMD_MSG(STR_ERROR_CAN_T_DELETE_THIS_ORDER));
++					}
++
++				}
++				else if (gofsfeeder_ordermod == GOFS_FEEDER_UNLOAD) { // still flushes the whole order table
++					if (DoCommandP(this->vehicle->tile, this->vehicle->index + ((this->vehicle->GetNumOrders()) << 20), cmd.Pack(), CMD_INSERT_ORDER | CMD_MSG(STR_ERROR_CAN_T_INSERT_NEW_ORDER))) {
++						DoCommandP(this->vehicle->tile, this->vehicle->index, (this->vehicle->GetNumOrders()-2+(int)_networking) , CMD_DELETE_ORDER | CMD_MSG(STR_ERROR_CAN_T_DELETE_THIS_ORDER));
++					}
++				}
++				gofsfeeder_ordermod = GOFS_FEEDER_NULL;
++			}
++			else if (DoCommandP(this->vehicle->tile, this->vehicle->index + (this->OrderGetSel() << 20), cmd.Pack(), CMD_INSERT_ORDER | CMD_MSG(STR_ERROR_CAN_T_INSERT_NEW_ORDER))) {
++					/* With quick goto the Go To button stays active */
+ 				if (!_settings_client.gui.quick_goto) ResetObjectToPlace();
+ 			}
+ 		}
+diff -r 69f04e3ec260 src/settings_gui.cpp
+--- a/src/settings_gui.cpp	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/settings_gui.cpp	Sat Jan 03 15:59:06 2015 +0000
+@@ -1623,6 +1623,19 @@
+ 				routing->Add(new SettingEntry("pf.pathfinder_for_roadvehs"));
+ 				routing->Add(new SettingEntry("pf.pathfinder_for_ships"));
+ 			}
++			SettingsPage *orders = vehicles->Add(new SettingsPage(STR_CONFIG_SETTING_VEHICLES_ORDERS));
++			{
++				orders->Add(new SettingEntry("gui.enable_ctrl_click_start_stop"));
++				orders->Add(new SettingEntry("gui.auto_noload_on_transfer"));
++				orders->Add(new SettingEntry("gui.auto_noload_on_unloadall"));
++				orders->Add(new SettingEntry("gui.goto_shortcuts_ctrl_lclick"));
++				orders->Add(new SettingEntry("gui.goto_shortcuts_shift_lclick"));
++				orders->Add(new SettingEntry("gui.goto_shortcuts_ctrlshift_lclick"));
++				orders->Add(new SettingEntry("gui.goto_shortcuts_alt_lclick"));
++				orders->Add(new SettingEntry("gui.goto_shortcuts_altshift_lclick"));
++				orders->Add(new SettingEntry("gui.goto_shortcuts_altctrl_lclick"));
++			}
++			
+ 
+ 			vehicles->Add(new SettingEntry("order.no_servicing_if_no_breakdowns"));
+ 			vehicles->Add(new SettingEntry("order.serviceathelipad"));
+diff -r 69f04e3ec260 src/settings_type.h
+--- a/src/settings_type.h	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/settings_type.h	Sat Jan 03 15:59:06 2015 +0000
+@@ -80,6 +80,15 @@
+ 	bool   show_finances;                    ///< show finances at end of year
+ 	bool   sg_new_nonstop;                   ///< ttdpatch compatible nonstop handling read from pre v93 savegames
+ 	bool   new_nonstop;                      ///< ttdpatch compatible nonstop handling
++	bool   enable_ctrl_click_start_stop;     ///< allow ctrl+click to start or stop vehicles
++	uint8  goto_shortcuts_ctrl_lclick;       ///< goto action shortcut CTRL+LEFT-CLICK
++	uint8  goto_shortcuts_shift_lclick;      ///< goto action shortcut SHIFT+LEFT-CLICK
++	uint8  goto_shortcuts_ctrlshift_lclick;  ///< goto action shortcut CTRL+SHIFT+LEFT-CLICK
++	uint8  goto_shortcuts_alt_lclick;        ///< goto action shortcut ALT+LEFT-CLICK
++	uint8  goto_shortcuts_altshift_lclick;   ///< goto action shortcut ALT+SHIFT+LEFT-CLICK
++	uint8  goto_shortcuts_altctrl_lclick;    ///< goto action shortcut ALT+CTRL+LEFT-CLICK
++	bool   auto_noload_on_transfer;          ///< automatically set no-loading when ordering to transfer all cargo
++	bool   auto_noload_on_unloadall;         ///< automatically set no-loading when ordering to unload all cargo
+ 	uint8  stop_location;                    ///< what is the default stop location of trains?
+ 	uint8  auto_scrolling;                   ///< scroll when moving mouse to the edge (see #ViewportAutoscrolling)
+ 	byte   errmsg_duration;                  ///< duration of error message
+diff -r 69f04e3ec260 src/table/settings.ini
+--- a/src/table/settings.ini	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/table/settings.ini	Sat Jan 03 15:59:06 2015 +0000
+@@ -3933,5 +3933,108 @@
+ strval   = STR_CONFIG_SETTING_RIGHT_MOUSE_BTN_EMU_COMMAND
+ cat      = SC_BASIC
+ 
++;;//MODGUI *********************************
++[SDTC_BOOL]
++var      = gui.enable_ctrl_click_start_stop
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++def      = true
++str      = STR_CONFIG_SETTING_CTRL_ENABLE_CTRLCLICK_STARTSTOP
++
++[SDTC_BOOL]
++var      = gui.auto_noload_on_transfer
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++def      = true
++str      = STR_CONFIG_SETTING_AUTOSET_NOLOAD_ON_TRANSFER
++
++[SDTC_BOOL]
++var      = gui.auto_noload_on_unloadall
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++def      = false
++str      = STR_CONFIG_SETTING_AUTOSET_NOLOAD_ON_UNLOAD
++
++[SDTC_VAR]
++var      = gui.goto_shortcuts_ctrl_lclick
++type     = SLE_UINT8
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++guiflags = SGF_MULTISTRING
++def      = 1
++min      = 0
++max      = 6
++interval = 1
++str      = STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_CTRLLCLICK
++strval   = STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE
++proc     = RedrawScreen
++cat      = SC_BASIC
++
++[SDTC_VAR]
++var      = gui.goto_shortcuts_shift_lclick
++type     = SLE_UINT8
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++guiflags = SGF_MULTISTRING
++def      = 0
++min      = 0
++max      = 6
++interval = 1
++str      = STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_SHIFTLCLICK
++strval   = STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE
++proc     = RedrawScreen
++cat      = SC_BASIC
++
++[SDTC_VAR]
++var      = gui.goto_shortcuts_ctrlshift_lclick
++type     = SLE_UINT8
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++guiflags = SGF_MULTISTRING
++def      = 0
++min      = 0
++max      = 6
++interval = 1
++str      = STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_CTRLSHIFTLCLICK
++strval   = STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE
++proc     = RedrawScreen
++cat      = SC_BASIC
++
++[SDTC_VAR]
++var      = gui.goto_shortcuts_alt_lclick
++type     = SLE_UINT8
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++guiflags = SGF_MULTISTRING
++def      = 0
++min      = 0
++max      = 6
++interval = 1
++str      = STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_ALTLCLICK
++strval   = STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE
++proc     = RedrawScreen
++cat      = SC_BASIC
++
++[SDTC_VAR]
++var      = gui.goto_shortcuts_altshift_lclick
++type     = SLE_UINT8
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++guiflags = SGF_MULTISTRING
++def      = 0
++min      = 0
++max      = 6
++interval = 1
++str      = STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_ALTSHIFTCLICK
++strval   = STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE
++proc     = RedrawScreen
++cat      = SC_BASIC
++
++[SDTC_VAR]
++var      = gui.goto_shortcuts_altctrl_lclick
++type     = SLE_UINT8
++flags    = SLF_NOT_IN_SAVE | SLF_NO_NETWORK_SYNC
++guiflags = SGF_MULTISTRING
++def      = 0
++min      = 0
++max      = 6
++interval = 1
++str      = STR_CONFIG_SETTING_CTRL_GOTOSHORTCUT_CTRLALTLCLICK
++strval   = STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_NONE
++proc     = RedrawScreen
++cat      = SC_BASIC
++
+ [SDT_END]
+ 
+diff -r 69f04e3ec260 src/video/sdl_v.cpp
+--- a/src/video/sdl_v.cpp	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/video/sdl_v.cpp	Sat Jan 03 15:59:06 2015 +0000
+@@ -752,8 +752,10 @@
+ 			next_tick = cur_ticks + MILLISECONDS_PER_TICK;
+ 
+ 			bool old_ctrl_pressed = _ctrl_pressed;
++			bool old_alt_pressed = _alt_pressed;
+ 
+ 			_ctrl_pressed  = !!(mod & KMOD_CTRL);
++			_alt_pressed = !!(mod & KMOD_ALT);
+ 			_shift_pressed = !!(mod & KMOD_SHIFT);
+ 
+ 			/* determine which directional keys are down */
+diff -r 69f04e3ec260 src/video/win32_v.cpp
+--- a/src/video/win32_v.cpp	Sat Jan 03 15:59:01 2015 +0000
++++ b/src/video/win32_v.cpp	Sat Jan 03 15:59:06 2015 +0000
+@@ -1263,8 +1263,10 @@
+ 			next_tick = cur_ticks + MILLISECONDS_PER_TICK;
+ 
+ 			bool old_ctrl_pressed = _ctrl_pressed;
++			bool old_alt_pressed = _alt_pressed;
+ 
+ 			_ctrl_pressed = _wnd.has_focus && GetAsyncKeyState(VK_CONTROL)<0;
++			_alt_pressed = _wnd.has_focus && GetAsyncKeyState(VK_MENU)<0;
+ 			_shift_pressed = _wnd.has_focus && GetAsyncKeyState(VK_SHIFT)<0;
+ 
+ 			/* determine which directional keys are down */

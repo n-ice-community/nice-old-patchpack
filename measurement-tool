@@ -1,8 +1,7 @@
-diff --git a/src/lang/english.txt b/src/lang/english.txt
-index 85011e4..5f7cf71 100644
---- a/src/lang/english.txt
-+++ b/src/lang/english.txt
-@@ -262,6 +262,7 @@ STR_MEASURE_LENGTH                                              :{BLACK}Length:
+diff -r 3a4da8ae90df src/lang/english.txt
+--- a/src/lang/english.txt	Sat Jan 03 15:58:51 2015 +0000
++++ b/src/lang/english.txt	Sat Jan 03 15:58:59 2015 +0000
+@@ -274,6 +274,7 @@
  STR_MEASURE_AREA                                                :{BLACK}Area: {NUM} x {NUM}
  STR_MEASURE_LENGTH_HEIGHTDIFF                                   :{BLACK}Length: {NUM}{}Height difference: {HEIGHT}
  STR_MEASURE_AREA_HEIGHTDIFF                                     :{BLACK}Area: {NUM} x {NUM}{}Height difference: {HEIGHT}
@@ -10,7 +9,7 @@ index 85011e4..5f7cf71 100644
  
  
  # These are used in buttons
-@@ -2431,6 +2432,7 @@ STR_LANDSCAPING_TOOLTIP_LOWER_A_CORNER_OF_LAND                  :{BLACK}Lower a
+@@ -2481,6 +2482,7 @@
  STR_LANDSCAPING_TOOLTIP_RAISE_A_CORNER_OF_LAND                  :{BLACK}Raise a corner of land. Dragging raises the first selected corner and levels the selected area to the new corner height. Ctrl selects the area diagonally. Shift toggles building/showing cost estimate
  STR_LANDSCAPING_LEVEL_LAND_TOOLTIP                              :{BLACK}Level an area of land to the height of the first selected corner. Ctrl selects the area diagonally. Shift toggles building/showing cost estimate
  STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Purchase land for future use. Shift toggles building/showing cost estimate
@@ -18,11 +17,10 @@ index 85011e4..5f7cf71 100644
  
  # Object construction window
  STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Object Selection
-diff --git a/src/lang/russian.txt b/src/lang/russian.txt
-index 979c598..5c74fe4 100644
---- a/src/lang/russian.txt
-+++ b/src/lang/russian.txt
-@@ -388,6 +388,7 @@ STR_MEASURE_LENGTH                                              :{BLACK}Длин
+diff -r 3a4da8ae90df src/lang/russian.txt
+--- a/src/lang/russian.txt	Sat Jan 03 15:58:51 2015 +0000
++++ b/src/lang/russian.txt	Sat Jan 03 15:58:59 2015 +0000
+@@ -399,6 +399,7 @@
  STR_MEASURE_AREA                                                :{BLACK}Площадь: {NUM} x {NUM}
  STR_MEASURE_LENGTH_HEIGHTDIFF                                   :{BLACK}Длина: {NUM}{}Разница высот: {HEIGHT}
  STR_MEASURE_AREA_HEIGHTDIFF                                     :{BLACK}Площадь: {NUM} x {NUM}{}Разница высот: {HEIGHT}
@@ -30,7 +28,7 @@ index 979c598..5c74fe4 100644
  
  
  # These are used in buttons
-@@ -2604,6 +2605,7 @@ STR_LANDSCAPING_TOOLTIP_LOWER_A_CORNER_OF_LAND                  :{BLACK}Опус
+@@ -2660,6 +2661,7 @@
  STR_LANDSCAPING_TOOLTIP_RAISE_A_CORNER_OF_LAND                  :{BLACK}Поднять угол земли. Перетаскивание поднимает первый выбранный угол и выравнивает выбранную область до новой высоты угла. Ctrl выбирает область по диагонали. При нажатом Shift - оценка стоимости строительства.
  STR_LANDSCAPING_LEVEL_LAND_TOOLTIP                              :{BLACK}Выровнять землю до высоты первого выбранного угла. Ctrl выбирает область по диагонали. При нажатом Shift - оценка стоимости выравнивания.
  STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Покупка земли. При нажатом Shift - оценка стоимости покупки.
@@ -38,11 +36,10 @@ index 979c598..5c74fe4 100644
  
  # Object construction window
  STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Выбор объекта
-diff --git a/src/terraform_gui.cpp b/src/terraform_gui.cpp
-index d1815ca..e902131 100644
---- a/src/terraform_gui.cpp
-+++ b/src/terraform_gui.cpp
-@@ -144,6 +144,11 @@ void PlaceProc_DemolishArea(TileIndex tile)
+diff -r 3a4da8ae90df src/terraform_gui.cpp
+--- a/src/terraform_gui.cpp	Sat Jan 03 15:58:51 2015 +0000
++++ b/src/terraform_gui.cpp	Sat Jan 03 15:58:59 2015 +0000
+@@ -147,6 +147,11 @@
  	VpStartPlaceSizing(tile, VPM_X_AND_Y, DDSP_DEMOLISH_AREA);
  }
  
@@ -54,7 +51,7 @@ index d1815ca..e902131 100644
  /** Terra form toolbar managing class. */
  struct TerraformToolbarWindow : Window {
  	int last_user_action; ///< Last started user action.
-@@ -201,6 +206,11 @@ struct TerraformToolbarWindow : Window {
+@@ -204,6 +209,11 @@
  				ShowBuildTreesToolbar();
  				break;
  
@@ -66,7 +63,7 @@ index d1815ca..e902131 100644
  			case WID_TT_PLACE_SIGN: // Place sign button
  				HandlePlacePushButton(this, WID_TT_PLACE_SIGN, SPR_CURSOR_SIGN, HT_RECT);
  				this->last_user_action = widget;
-@@ -242,6 +252,10 @@ struct TerraformToolbarWindow : Window {
+@@ -245,6 +255,10 @@
  				DoCommandP(tile, OBJECT_OWNED_LAND, 0, CMD_BUILD_OBJECT | CMD_MSG(STR_ERROR_CAN_T_PURCHASE_THIS_LAND), CcPlaySound1E);
  				break;
  
@@ -77,7 +74,7 @@ index d1815ca..e902131 100644
  			case WID_TT_PLACE_SIGN: // Place sign button
  				PlaceProc_Sign(tile);
  				break;
-@@ -277,6 +291,9 @@ struct TerraformToolbarWindow : Window {
+@@ -280,6 +294,9 @@
  				case DDSP_LEVEL_AREA:
  					GUIPlaceProcDragXY(select_proc, start_tile, end_tile);
  					break;
@@ -87,7 +84,7 @@ index d1815ca..e902131 100644
  			}
  		}
  	}
-@@ -310,6 +327,7 @@ static Hotkey terraform_hotkeys[] = {
+@@ -313,6 +330,7 @@
  	Hotkey('D' | WKC_GLOBAL_HOTKEY, "dynamite", WID_TT_DEMOLISH),
  	Hotkey('U', "buyland", WID_TT_BUY_LAND),
  	Hotkey('I', "trees", WID_TT_PLANT_TREES),
@@ -95,7 +92,7 @@ index d1815ca..e902131 100644
  	Hotkey('O', "placesign", WID_TT_PLACE_SIGN),
  	Hotkey('P', "placeobject", WID_TT_PLACE_OBJECT),
  	HOTKEY_LIST_END
-@@ -338,6 +356,8 @@ static const NWidgetPart _nested_terraform_widgets[] = {
+@@ -341,6 +359,8 @@
  								SetFill(0, 1), SetDataTip(SPR_IMG_BUY_LAND, STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND),
  		NWidget(WWT_PUSHIMGBTN, COLOUR_DARK_GREEN, WID_TT_PLANT_TREES), SetMinimalSize(22, 22),
  								SetFill(0, 1), SetDataTip(SPR_IMG_PLANTTREES, STR_SCENEDIT_TOOLBAR_PLANT_TREES),
@@ -104,11 +101,10 @@ index d1815ca..e902131 100644
  		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_TT_PLACE_SIGN), SetMinimalSize(22, 22),
  								SetFill(0, 1), SetDataTip(SPR_IMG_SIGN, STR_SCENEDIT_TOOLBAR_PLACE_SIGN),
  		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_TT_SHOW_PLACE_OBJECT),
-diff --git a/src/viewport.cpp b/src/viewport.cpp
-index da04740..0384f8a 100644
---- a/src/viewport.cpp
-+++ b/src/viewport.cpp
-@@ -2815,6 +2815,45 @@ calc_heightdiff_single_direction:;
+diff -r 3a4da8ae90df src/viewport.cpp
+--- a/src/viewport.cpp	Sat Jan 03 15:58:51 2015 +0000
++++ b/src/viewport.cpp	Sat Jan 03 15:58:59 2015 +0000
+@@ -3345,6 +3345,45 @@
  			}
  			break;
  
@@ -154,10 +150,9 @@ index da04740..0384f8a 100644
  		case VPM_X_AND_Y_LIMITED: // Drag an X by Y constrained rect area.
  			limit = (_thd.sizelimit - 1) * TILE_SIZE;
  			x = sx + Clamp(x - sx, -limit, limit);
-diff --git a/src/viewport_type.h b/src/viewport_type.h
-index 800c8b4..4e48e27 100644
---- a/src/viewport_type.h
-+++ b/src/viewport_type.h
+diff -r 3a4da8ae90df src/viewport_type.h
+--- a/src/viewport_type.h	Sat Jan 03 15:58:51 2015 +0000
++++ b/src/viewport_type.h	Sat Jan 03 15:58:59 2015 +0000
 @@ -14,6 +14,7 @@
  
  #include "zoom_type.h"
@@ -166,7 +161,7 @@ index 800c8b4..4e48e27 100644
  
  class LinkGraphOverlay;
  
-@@ -84,6 +85,7 @@ enum ViewportPlaceMethod {
+@@ -84,6 +85,7 @@
  	VPM_FIX_VERTICAL    =    6, ///< drag only in vertical direction
  	VPM_X_LIMITED       =    7, ///< Drag only in X axis with limited size
  	VPM_Y_LIMITED       =    8, ///< Drag only in Y axis with limited size
@@ -174,7 +169,7 @@ index 800c8b4..4e48e27 100644
  	VPM_RAILDIRS        = 0x40, ///< all rail directions
  	VPM_SIGNALDIRS      = 0x80, ///< similar to VMP_RAILDIRS, but with different cursor
  };
-@@ -104,6 +106,7 @@ enum ViewportDragDropSelectionProcess {
+@@ -104,6 +106,7 @@
  	DDSP_CREATE_RIVER,         ///< Create rivers
  	DDSP_PLANT_TREES,          ///< Plant trees
  	DDSP_BUILD_BRIDGE,         ///< Bridge placement
@@ -182,11 +177,10 @@ index 800c8b4..4e48e27 100644
  
  	/* Rail specific actions */
  	DDSP_PLACE_RAIL,           ///< Rail placement
-diff --git a/src/widgets/terraform_widget.h b/src/widgets/terraform_widget.h
-index 7f8a4c4..d796652 100644
---- a/src/widgets/terraform_widget.h
-+++ b/src/widgets/terraform_widget.h
-@@ -22,6 +22,7 @@ enum TerraformToolbarWidgets {
+diff -r 3a4da8ae90df src/widgets/terraform_widget.h
+--- a/src/widgets/terraform_widget.h	Sat Jan 03 15:58:51 2015 +0000
++++ b/src/widgets/terraform_widget.h	Sat Jan 03 15:58:59 2015 +0000
+@@ -22,6 +22,7 @@
  	WID_TT_DEMOLISH,                          ///< Demolish aka dynamite button.
  	WID_TT_BUY_LAND,                          ///< Buy land button.
  	WID_TT_PLANT_TREES,                       ///< Plant trees button (note: opens separate window, no place-push-button).
