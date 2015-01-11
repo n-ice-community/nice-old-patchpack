@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent bdacf321db711a40784660ebeb00db028c9cbea4
+# Parent 54b85fa043c2f742aa520cd256bfefa869a2d769
 
-diff -r bdacf321db71 src/lang/english.txt
---- a/src/lang/english.txt	Sat Jan 03 15:59:11 2015 +0000
-+++ b/src/lang/english.txt	Sat Jan 03 15:59:15 2015 +0000
+diff -r 54b85fa043c2 src/lang/english.txt
+--- a/src/lang/english.txt	Sun Jan 11 19:19:09 2015 +0000
++++ b/src/lang/english.txt	Sun Jan 11 19:19:14 2015 +0000
 @@ -5026,3 +5026,6 @@
  STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_FEEDERLOAD                :Feeder Load (replace first order)
  STR_CONFIG_SETTING_CTRL_GOTOSHORTOPTS_FEEDERDROP                :Feeder Unload (replace last order)
@@ -11,9 +11,9 @@ diff -r bdacf321db71 src/lang/english.txt
 +
 +# Town gui extended
 +STR_TOWN_VIEW_GROWTH                                            :{BLACK}GR: {ORANGE}{COMMA}{BLACK} next: {ORANGE}{COMMA} {BLACK} RH: {ORANGE}{COMMA} {BLACK}flag {ORANGE}{COMMA}  {BLACK}Fund: {ORANGE}{COMMA}{SILVER}m
-diff -r bdacf321db71 src/town_gui.cpp
---- a/src/town_gui.cpp	Sat Jan 03 15:59:11 2015 +0000
-+++ b/src/town_gui.cpp	Sat Jan 03 15:59:15 2015 +0000
+diff -r 54b85fa043c2 src/town_gui.cpp
+--- a/src/town_gui.cpp	Sun Jan 11 19:19:09 2015 +0000
++++ b/src/town_gui.cpp	Sun Jan 11 19:19:14 2015 +0000
 @@ -326,6 +326,10 @@
  		if (widget == WID_TV_CAPTION) SetDParam(0, this->town->index);
  	}
