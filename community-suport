@@ -1,0 +1,65 @@
+# HG changeset patch
+# Parent f503b97fc8378a2195a370c4a1202761d04f14a4
+
+diff -r f503b97fc837 source.list
+--- a/source.list	Sun Jan 11 19:39:26 2015 +0000
++++ b/source.list	Thu Jan 15 15:27:04 2015 +0000
+@@ -54,6 +54,7 @@
+ misc.cpp
+ mixer.cpp
+ music.cpp
++nc_settings.cpp
+ network/network.cpp
+ network/network_admin.cpp
+ network/network_client.cpp
+@@ -240,6 +241,7 @@
+ map_func.h
+ map_type.h
+ mixer.h
++nc_settings.h
+ network/network.h
+ network/network_admin.h
+ network/network_base.h
+diff -r f503b97fc837 src/fileio.cpp
+--- a/src/fileio.cpp	Sun Jan 11 19:39:26 2015 +0000
++++ b/src/fileio.cpp	Thu Jan 15 15:27:04 2015 +0000
+@@ -293,6 +293,7 @@
+ 	"game" PATHSEP,
+ 	"game" PATHSEP "library" PATHSEP,
+ 	"screenshot" PATHSEP,
++	"community" PATHSEP,
+ };
+ assert_compile(lengthof(_subdirs) == NUM_SUBDIRS);
+ 
+@@ -1261,6 +1262,11 @@
+ 	_hotkeys_file = str_fmt("%shotkeys.cfg", config_dir);
+ 	extern char *_windows_file;
+ 	_windows_file = str_fmt("%swindows.cfg", config_dir);
++	
++	char community_dir[MAX_PATH];
++	seprintf(community_dir, lastof(community_dir), "%s%s", config_dir, _subdirs[COMMUNITY_DIR]);
++	extern char *_community_file;
++	_community_file = str_fmt("%scommunities.cfg", config_dir);
+ 
+ #if defined(WITH_XDG_BASEDIR) && defined(WITH_PERSONAL_DIR)
+ 	if (config_dir == config_home) {
+@@ -1283,7 +1289,7 @@
+ 	DEBUG(misc, 3, "%s found as personal directory", _personal_dir);
+ 
+ 	static const Subdirectory default_subdirs[] = {
+-		SAVE_DIR, AUTOSAVE_DIR, SCENARIO_DIR, HEIGHTMAP_DIR, BASESET_DIR, NEWGRF_DIR, AI_DIR, AI_LIBRARY_DIR, GAME_DIR, GAME_LIBRARY_DIR, SCREENSHOT_DIR
++		SAVE_DIR, AUTOSAVE_DIR, SCENARIO_DIR, HEIGHTMAP_DIR, BASESET_DIR, NEWGRF_DIR, AI_DIR, AI_LIBRARY_DIR, GAME_DIR, GAME_LIBRARY_DIR, SCREENSHOT_DIR, COMMUNITY_DIR
+ 	};
+ 
+ 	for (uint i = 0; i < lengthof(default_subdirs); i++) {
+diff -r f503b97fc837 src/fileio_type.h
+--- a/src/fileio_type.h	Sun Jan 11 19:39:26 2015 +0000
++++ b/src/fileio_type.h	Thu Jan 15 15:27:04 2015 +0000
+@@ -33,6 +33,7 @@
+ 	GAME_DIR,      ///< Subdirectory for all game scripts
+ 	GAME_LIBRARY_DIR, ///< Subdirectory for all GS libraries
+ 	SCREENSHOT_DIR,   ///< Subdirectory for all screenshots
++	COMMUNITY_DIR,    ///< Subdirectory for all community files
+ 	NUM_SUBDIRS,   ///< Number of subdirectories
+ 	NO_DIRECTORY,  ///< A path without any base directory
+ };
