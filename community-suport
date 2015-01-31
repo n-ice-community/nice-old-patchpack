@@ -1,28 +1,29 @@
 # HG changeset patch
-# Parent f503b97fc8378a2195a370c4a1202761d04f14a4
+# Parent 31b2e39e4cc4dc8109a6a8ed19c207dad31eb84f
 
-diff -r f503b97fc837 source.list
---- a/source.list	Sun Jan 11 19:39:26 2015 +0000
-+++ b/source.list	Thu Jan 15 15:27:04 2015 +0000
+diff -r 31b2e39e4cc4 source.list
+--- a/source.list	Sun Jan 18 14:10:24 2015 +0000
++++ b/source.list	Wed Jan 21 23:00:45 2015 +0000
 @@ -54,6 +54,7 @@
  misc.cpp
  mixer.cpp
  music.cpp
-+nc_settings.cpp
++nc_csettings.cpp
  network/network.cpp
  network/network_admin.cpp
  network/network_client.cpp
-@@ -240,6 +241,7 @@
+@@ -240,6 +241,8 @@
  map_func.h
  map_type.h
  mixer.h
-+nc_settings.h
++nc_csettings.h
++nc_receiver.h
  network/network.h
  network/network_admin.h
  network/network_base.h
-diff -r f503b97fc837 src/fileio.cpp
---- a/src/fileio.cpp	Sun Jan 11 19:39:26 2015 +0000
-+++ b/src/fileio.cpp	Thu Jan 15 15:27:04 2015 +0000
+diff -r 31b2e39e4cc4 src/fileio.cpp
+--- a/src/fileio.cpp	Sun Jan 18 14:10:24 2015 +0000
++++ b/src/fileio.cpp	Wed Jan 21 23:00:45 2015 +0000
 @@ -293,6 +293,7 @@
  	"game" PATHSEP,
  	"game" PATHSEP "library" PATHSEP,
@@ -31,19 +32,18 @@ diff -r f503b97fc837 src/fileio.cpp
  };
  assert_compile(lengthof(_subdirs) == NUM_SUBDIRS);
  
-@@ -1261,6 +1262,11 @@
+@@ -1261,6 +1262,10 @@
  	_hotkeys_file = str_fmt("%shotkeys.cfg", config_dir);
  	extern char *_windows_file;
  	_windows_file = str_fmt("%swindows.cfg", config_dir);
 +	
-+	char community_dir[MAX_PATH];
-+	seprintf(community_dir, lastof(community_dir), "%s%s", config_dir, _subdirs[COMMUNITY_DIR]);
-+	extern char *_community_file;
-+	_community_file = str_fmt("%scommunities.cfg", config_dir);
++	extern char *_community_dir;
++	_community_dir = str_fmt("%s%s", config_dir, _subdirs[COMMUNITY_DIR]); // TODO find better solution
++	
  
  #if defined(WITH_XDG_BASEDIR) && defined(WITH_PERSONAL_DIR)
  	if (config_dir == config_home) {
-@@ -1283,7 +1289,7 @@
+@@ -1283,7 +1288,7 @@
  	DEBUG(misc, 3, "%s found as personal directory", _personal_dir);
  
  	static const Subdirectory default_subdirs[] = {
@@ -52,9 +52,9 @@ diff -r f503b97fc837 src/fileio.cpp
  	};
  
  	for (uint i = 0; i < lengthof(default_subdirs); i++) {
-diff -r f503b97fc837 src/fileio_type.h
---- a/src/fileio_type.h	Sun Jan 11 19:39:26 2015 +0000
-+++ b/src/fileio_type.h	Thu Jan 15 15:27:04 2015 +0000
+diff -r 31b2e39e4cc4 src/fileio_type.h
+--- a/src/fileio_type.h	Sun Jan 18 14:10:24 2015 +0000
++++ b/src/fileio_type.h	Wed Jan 21 23:00:45 2015 +0000
 @@ -33,6 +33,7 @@
  	GAME_DIR,      ///< Subdirectory for all game scripts
  	GAME_LIBRARY_DIR, ///< Subdirectory for all GS libraries
@@ -63,3 +63,603 @@ diff -r f503b97fc837 src/fileio_type.h
  	NUM_SUBDIRS,   ///< Number of subdirectories
  	NO_DIRECTORY,  ///< A path without any base directory
  };
+diff -r 31b2e39e4cc4 src/ini_load.cpp
+--- a/src/ini_load.cpp	Sun Jan 18 14:10:24 2015 +0000
++++ b/src/ini_load.cpp	Wed Jan 21 23:00:45 2015 +0000
+@@ -323,3 +323,121 @@
+ 	fclose(in);
+ }
+ 
++/**
++ * Load the Ini file's data from a string
++ * @param text the string with ini format
++ * @pre nothing has been loaded yet.
++ */
++void IniLoadFile::LoadFromString(std::string text)
++{
++	assert(this->last_group == &this->group);
++
++	char buffer[1024];
++	IniGroup *group = NULL;
++
++	char *comment = NULL;
++	uint comment_size = 0;
++	uint comment_alloc = 0;
++
++	if (text.empty()) return;
++
++	uint pos = 0;
++	size_t pos2 = 0;
++	/* for each line in the string */
++	while (pos <= text.length() && pos2 != std::string::npos) {
++		strecpy(buffer,text.substr(pos, ((pos2 = text.find('\n',pos+1)) == std::string::npos ? text.length() : pos2)-pos).c_str(),lastof(buffer));
++		printf("Reading Line:[%d,%d] %s\n",pos,pos2,buffer);
++		pos = pos2+1;
++		char c, *s;
++		/* trim whitespace from the left side */
++		for (s = buffer; *s == ' ' || *s == '\t'; s++) {}
++
++		/* trim whitespace from right side. */
++		char *e = s + strlen(s);
++		while (e > s && ((c = e[-1]) == '\n' || c == '\r' || c == ' ' || c == '\t')) e--;
++		*e = '\0';
++
++		/* Skip comments and empty lines outside IGT_SEQUENCE groups. */
++		if ((group == NULL || group->type != IGT_SEQUENCE) && (*s == '#' || *s == ';' || *s == '\0')) {
++			uint ns = comment_size + (e - s + 1);
++			uint a = comment_alloc;
++			/* add to comment */
++			if (ns > a) {
++				a = max(a, 128U);
++				do a *= 2; while (a < ns);
++				comment = ReallocT(comment, comment_alloc = a);
++			}
++			uint pos = comment_size;
++			comment_size += (e - s + 1);
++			comment[pos + e - s] = '\n'; // comment newline
++			memcpy(comment + pos, s, e - s); // copy comment contents
++			continue;
++		}
++
++		/* it's a group? */
++		if (s[0] == '[') {
++			if (e[-1] != ']') {
++				this->ReportFileError("ini: invalid group name '", buffer, "'");
++			} else {
++				e--;
++			}
++			s++; // skip [
++			group = new IniGroup(this, s, e - 1);
++			if (comment_size != 0) {
++				group->comment = stredup(comment, comment + comment_size - 1);
++				comment_size = 0;
++			}
++		} else if (group != NULL) {
++			if (group->type == IGT_SEQUENCE) {
++				/* A sequence group, use the line as item name without further interpretation. */
++				IniItem *item = new IniItem(group, buffer, e - 1);
++				if (comment_size) {
++					item->comment = stredup(comment, comment + comment_size - 1);
++					comment_size = 0;
++				}
++				continue;
++			}
++			char *t;
++			/* find end of keyname */
++			if (*s == '\"') {
++				s++;
++				for (t = s; *t != '\0' && *t != '\"'; t++) {}
++				if (*t == '\"') *t = ' ';
++			} else {
++				for (t = s; *t != '\0' && *t != '=' && *t != '\t' && *t != ' '; t++) {}
++			}
++
++			/* it's an item in an existing group */
++			IniItem *item = new IniItem(group, s, t - 1);
++			if (comment_size != 0) {
++				item->comment = stredup(comment, comment + comment_size - 1);
++				comment_size = 0;
++			}
++
++			/* find start of parameter */
++			while (*t == '=' || *t == ' ' || *t == '\t') t++;
++
++			bool quoted = (*t == '\"');
++			/* remove starting quotation marks */
++			if (*t == '\"') t++;
++			/* remove ending quotation marks */
++			e = t + strlen(t);
++			if (e > t && e[-1] == '\"') e--;
++			*e = '\0';
++
++			/* If the value was not quoted and empty, it must be NULL */
++			item->value = (!quoted && e == t) ? NULL : stredup(t);
++			if (item->value != NULL) str_validate(item->value, item->value + strlen(item->value));
++		} else {
++			/* it's an orphan item */
++			this->ReportFileError("ini: '", buffer, "' outside of group");
++		}
++	}
++
++	if (comment_size > 0) {
++		this->comment = stredup(comment, comment + comment_size - 1);
++		comment_size = 0;
++	}
++
++	free(comment);
++}
+diff -r 31b2e39e4cc4 src/ini_type.h
+--- a/src/ini_type.h	Sun Jan 18 14:10:24 2015 +0000
++++ b/src/ini_type.h	Wed Jan 21 23:00:45 2015 +0000
+@@ -12,6 +12,7 @@
+ #ifndef INI_TYPE_H
+ #define INI_TYPE_H
+ 
++#include <string>
+ #include "fileio_type.h"
+ 
+ /** Types of groups */
+@@ -65,6 +66,7 @@
+ 	void RemoveGroup(const char *name);
+ 
+ 	void LoadFromDisk(const char *filename, Subdirectory subdir);
++	void LoadFromString(std::string text);
+ 
+ 	/**
+ 	 * Open the INI file.
+diff -r 31b2e39e4cc4 src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Sun Jan 18 14:10:24 2015 +0000
++++ b/src/intro_gui.cpp	Wed Jan 21 23:00:45 2015 +0000
+@@ -9,6 +9,8 @@
+ 
+ /** @file intro_gui.cpp The main menu GUI. */
+ 
++#include "nc_csettings.h"
++
+ #include "stdafx.h"
+ #include "error.h"
+ #include "gui.h"
+diff -r 31b2e39e4cc4 src/nc_csettings.cpp
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_csettings.cpp	Wed Jan 21 23:00:45 2015 +0000
+@@ -0,0 +1,305 @@
++#include "nc_csettings.h"
++#include "network/network_content.h"
++#include "fileio_func.h"
++#include "safeguards.h"
++
++char* _community_dir;
++
++CSettings& CSettings::get()
++{
++	static CSettings instance;
++	return instance;
++}
++
++CSettings::CSettings()
++{
++	community_file = str_fmt("%scommunities.cfg", _community_dir);
++	this->selected = 0;
++	if(FileExists(community_file)) // Load from file
++		LoadCommunities();
++}
++
++void CSettings::CheckIntegrity()
++{
++	for(uint i = 0; i < community_list.Length();i++)
++		community_list[i]->CheckIntegrity();
++}
++void CSettings::LoadCommunities()
++{
++	IniFile *ini = new IniFile();
++	ini->LoadFromDisk(community_file, BASE_DIR);
++	
++	IniGroup* cur = ini->group;
++	while(&cur != ini->last_group && cur != NULL)// TODO Verify if it is correct
++	{
++		Community* temp = new Community(this);
++		if(temp->Load(cur,false))
++			this->selected = community_list.Length();
++		*community_list.Append() = temp;
++		cur = cur->next;
++	}
++	delete ini;
++}
++
++void CSettings::SaveCommunities()
++{
++	IniFile *ini = new IniFile();
++	ini->LoadFromDisk(community_file, BASE_DIR);
++
++	for(uint i = 0; i < community_list.Length() ; i++)
++	{
++		community_list[i]->Save(ini,this->selected == i);
++	}
++	ini->SaveToDisk(community_file);
++	RegistUpdate();
++	delete ini;
++}
++
++int CSettings::Size()
++{
++	return community_list.Length();
++}
++void CSettings::RegistToWait(void (*thereWasAnUpdate)(void))
++{
++	this->thereWasAnUpdate = thereWasAnUpdate;
++}
++void CSettings::RegistUpdate()
++{
++	printf("Called lazy\n");
++	if(thereWasAnUpdate) thereWasAnUpdate();
++}
++Community *CSettings::GetSelected()
++{
++	CheckIntegrity();
++	return community_list[selected];
++}
++uint CSettings::Selected()
++{
++	return this->selected;
++}
++void CSettings::SetSelected(uint i)
++{
++	this->selected = i <= (community_list.Length()-1) ? i : (community_list.Length()-1);
++	this->SaveCommunities();
++}
++char *CSettings::GetCommunityName(int i)
++{
++	return community_list[i]->display_name;
++}
++Community::Community(CSettings* s)
++{
++	this->_instance = s;
++}
++void Community::CheckIntegrity()
++{
++	// TODO For now assume it was moddified every 5 min
++	// TODO Later implement If-Modified-Since: HTTP Request
++	if((difftime(std::time(nullptr),this->modified) >= 300 /*5min*/ ))
++	{
++		if(!out_of_sync)
++			ReceiveModified(true);
++	}
++	if(server_list != NULL) server_list->CheckIntegrity();
++}
++
++void Community::ReceiveModified(bool mod)
++{
++	if(mod)
++	{
++		new SimpleTxtDownloader(this->linklist_url , this);
++		this->out_of_sync = true;
++	}	
++}
++
++void Community::DataReceived(std::string s)
++{
++	IniFile* ini = new IniFile();
++	ini->LoadFromString(s);
++	IniGroup* cur = ini->group;
++	
++	this->Load(cur,true);
++	this->out_of_sync = false;
++	_instance->SaveCommunities();
++	delete ini;
++}
++void Community::Failed()
++{
++}
++
++bool Community::isOutOfSync()
++{
++	return out_of_sync;
++}
++
++const char* Community::GetName()
++{
++	return display_name;
++}
++bool Community::Load(IniGroup* group,bool update)
++{
++	bool result = false; 
++	IniItem* item = group->GetItem("linklist",false);
++	this->group_name = stredup(group->name,NULL);
++	if(item == NULL)
++	{
++		printf("Linked list not found");
++		//Error . Invalid
++		return false;
++	}
++	this->linklist_url = stredup(item->value,NULL);
++	
++	this->display_name = (item = group->GetItem("display_name",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	if((item =group->GetItem("selected",false)) != NULL && strcmp(item->value,"true") == 0)
++		result = true;
++	item = group->GetItem("serverlist",false);
++	
++	this->serverlist_url = (item = group->GetItem("serverlist",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	this->servergrouplist_url = (item = group->GetItem("servergroup",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	this->adminlist_url = (item = group->GetItem("adminlist",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	if((item = group->GetItem("modified",false)) == NULL)
++		if(update)
++			this->modified = std::time(nullptr);
++		else
++			this->modified = 0;
++	else
++		this->modified = static_cast<time_t>(atol(item->value));
++	
++	return result;
++}
++
++void Community::Save(IniFile* ini, bool selected)
++{
++	IniGroup* group = ini->GetGroup(this->group_name,0,true);
++	if(this->display_name != NULL) group->GetItem("display_name",true)->SetValue(this->display_name);
++	if(this->linklist_url != NULL) group->GetItem("linklist",true)->SetValue(this->linklist_url);
++	if(this->serverlist_url != NULL) group->GetItem("serverlist",true)->SetValue(this->serverlist_url);
++	if(this->servergrouplist_url != NULL) group->GetItem("servergroup",true)->SetValue(this->servergrouplist_url);
++	if(this->adminlist_url != NULL) group->GetItem("adminlist",true)->SetValue(this->adminlist_url);
++	char temp[32];
++	seprintf(temp, lastof(temp),"%ld",this->modified);
++	group->GetItem("modified",true)->SetValue(temp);
++	group->GetItem("selected",true)->SetValue( selected ? "true": "false");
++}
++
++long int Community::LastModified()
++{
++	return modified;
++}
++
++ServerList* Community::GetServerList() 
++{
++	if(server_list == NULL && serverlist_url != NULL)
++	{
++		server_list = new ServerList(str_fmt("%s%s_serverlist.cfg",_community_dir,this->group_name),this->serverlist_url);
++		server_list->Load(NULL,false);
++	}
++	return server_list;
++}
++
++ServerList::ServerList(char *file,char *link)
++{
++	this->file = file;
++	this->link = link;
++}
++void ServerList::CheckIntegrity()
++{
++	// TODO For now assume it was moddified every 5 min
++	// TODO Later implement If-Modified-Since: HTTP Request
++	this->isOutOfSync();
++	if((difftime(std::time(nullptr),this->modified) >= 300 /*5min*/ ))
++	{
++		if(!out_of_sync)
++			ReceiveModified(true);
++	}
++}
++
++void ServerList::ReceiveModified(bool mod)
++{
++	if(mod)
++	{
++		new SimpleTxtDownloader(this->link, this);
++		this->out_of_sync = true;
++	}	
++}
++
++void ServerList::DataReceived(std::string s)
++{
++	IniFile* ini = new IniFile();
++	ini->LoadFromString(s);
++	this->Load(ini,true);
++	this->Save();
++	this->out_of_sync = false;
++	delete ini;
++}
++void ServerList::Failed()
++{
++}
++
++bool ServerList::isOutOfSync()
++{
++	return this->out_of_sync;
++}
++
++void ServerList::Load(IniFile* ini,bool update)
++{
++	data.Clear();
++	if(!update)
++	{
++		ini = new IniFile();
++		ini->LoadFromDisk(file,BASE_DIR);
++	}else
++	{
++		this->modified = std::time(nullptr);
++	}
++	IniGroup* group = ini->group;
++	IniItem* item;
++	for(;&group != ini->last_group && group != NULL;group = group->next)
++	{
++		if(strcmp(group->name,"details") == 0)
++		{
++			if((item = group->GetItem("modified",false)) == NULL)
++				this->modified = 0;
++			else
++				this->modified = static_cast<time_t>(atol(item->value));
++			continue;
++		}
++		Server* temp = new Server();
++		temp->display_name =(item = group->GetItem("display_name",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++		temp->ipv4 = (item = group->GetItem("ipv4",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++		temp->ipv6 = (item = group->GetItem("ipv6",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++		temp->port = (item = group->GetItem("port",false)) == NULL || item->value == NULL ? 0 : atoi(item->value);
++		*this->data.Append() = temp;
++	}
++	delete ini;	
++}
++
++void ServerList::Save()
++{
++	IniFile* ini = new IniFile();
++	IniGroup* group = ini->GetGroup("details",0,true);
++	char temp[32];
++	seprintf(temp, lastof(temp),"%ld",this->modified);
++	group->GetItem("modified",true)->SetValue(temp);
++	for(uint i = 0; i < data.Length(); i++)
++	{
++		group = ini->GetGroup(data[i]->display_name,0,true);
++		if(data[i]->display_name != NULL) group->GetItem("display_name",true)->SetValue(data[i]->display_name);
++		if(data[i]->ipv4 != NULL) group->GetItem("ipv4",true)->SetValue(data[i]->ipv4);
++		if(data[i]->ipv6 != NULL) group->GetItem("ipv6",true)->SetValue(data[i]->ipv6);
++		char temp[5];
++		seprintf(temp,lastof(temp),"%d",data[i]->port);
++		group->GetItem("port",true)->SetValue(temp);
++	}
++	ini->SaveToDisk(file);
++	CSettings::get().RegistUpdate();
++}
++
++Server *ServerList::Get(uint i)
++{
++	return i <= data.Length()? data[i] : NULL;
++}
++
++uint ServerList::Size()
++{
++	return data.Length();
++}
+diff -r 31b2e39e4cc4 src/nc_csettings.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_csettings.h	Wed Jan 21 23:00:45 2015 +0000
+@@ -0,0 +1,115 @@
++#ifndef NC_CSETTINGS_H
++#define NC_CSETTINGS_H
++
++#include "nc_receiver.h"
++#include "stdafx.h"
++#include "gfx_type.h"
++#include "ini_type.h"
++#include "misc/fixedsizearray.hpp"
++#include <string>
++#include <ctime>
++
++struct Server
++{
++	char* display_name = NULL;
++	char* ipv4 = NULL;
++	char* ipv6 = NULL;
++	int port = 0;
++};
++
++class ServerList : public Receiver
++{
++private:
++	const char *link = NULL;
++	const char *file = NULL;
++	FixedSizeArray<Server*,50> data;
++	time_t modified = 0;
++	bool out_of_sync = false;
++public:
++	Server *Get(uint i);
++	uint Size();
++	void Load(IniFile*,bool);
++	void Save();
++	bool isOutOfSync();
++	
++	void CheckIntegrity();
++	/*virtual*/void ReceiveModified(bool);
++	virtual void DataReceived(std::string);
++	virtual void Failed();
++	ServerList(char *,char*);
++};
++struct Admin
++{
++	char* name = NULL;
++	char* role = NULL;
++};
++class ServerGroup
++{
++};
++
++class CSettings;
++
++class Community : public Receiver
++{
++private:
++	CSettings* _instance = NULL; //XXX for real? yes
++	char* group_name = NULL;
++	char* linklist_url = NULL;
++	char* serverlist_url = NULL;
++	char* servergrouplist_url = NULL;
++	char* adminlist_url = NULL;
++	time_t modified = 0;
++	bool out_of_sync = false;
++	
++	ServerList* server_list = NULL;
++//	ServerGroupList servergroup_list;
++//	AdminList admin_list;
++public:
++	char* display_name  = NULL;
++	ServerList* GetServerList();
++	void CheckIntegrity();
++	//
++	Community(CSettings*);
++	bool Load(IniGroup*,bool);
++	void Save(IniFile*,bool);
++	bool isOutOfSync();
++	
++	const char* GetName();
++	long int LastModified();
++	
++	/*virtual*/void ReceiveModified(bool);
++	virtual void DataReceived(std::string);
++	virtual void Failed();
++};
++
++
++class CSettings 
++{
++private:
++	void (*thereWasAnUpdate)(void);
++	char *community_file;
++	FixedSizeArray<Community*,10> community_list;
++	uint selected;
++	
++	CSettings();
++	CSettings(CSettings const&);
++	void operator=(CSettings const&); 
++	void CheckIntegrity();
++public:
++	static CSettings& get();
++
++	bool isThereConnection();
++
++	int Size();
++	Community *GetSelected();
++	void SetSelected(uint i);
++	char *GetCommunityName(int);
++	uint Selected(); 
++	
++	void LoadCommunities();
++	void SaveCommunities();
++	
++	void RegistToWait(void (*thereWasAnUpdate)(void)); // Poor man observer ? :D
++	void RegistUpdate();
++};
++#endif
+diff -r 31b2e39e4cc4 src/nc_receiver.h
+--- a/src/nc_receiver.h	Sun Jan 18 14:10:24 2015 +0000
++++ b/src/nc_receiver.h	Wed Jan 21 23:00:45 2015 +0000
+@@ -1,3 +1,6 @@
++#ifndef NC_RECEIVER_H
++#define NC_RECEIVER_H
++
+ #include <string>
+ 
+ class Receiver
+@@ -7,3 +10,5 @@
+   virtual void DataReceived(std::string) = 0;
+   virtual void Failed() = 0;
+ };
++
++#endif

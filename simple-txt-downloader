@@ -1,30 +1,43 @@
 # HG changeset patch
 # Parent  e9ed5e03dcd5f48212ef3ed1ebd1abcffd9d18b1
 
+diff -r e9ed5e03dcd5 src/nc_receiver.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_receiver.h	Sun Jan 18 14:10:24 2015 +0000
+@@ -0,0 +1,9 @@
++#include <string>
++
++class Receiver
++{
++public:
++  virtual ~Receiver() {}
++  virtual void DataReceived(std::string) = 0;
++  virtual void Failed() = 0;
++};
 diff -r e9ed5e03dcd5 src/network/network_content.cpp
 --- a/src/network/network_content.cpp	Sun Jan 11 19:19:14 2015 +0000
-+++ b/src/network/network_content.cpp	Sun Jan 11 19:39:26 2015 +0000
++++ b/src/network/network_content.cpp	Sun Jan 18 14:10:24 2015 +0000
 @@ -1095,4 +1095,29 @@
  	}
  }
  
-+SimpleTxtDownloader::SimpleTxtDownloader(const char* addr, void (*OnAllDataReceived)(std::string data, int id)) 
++SimpleTxtDownloader::SimpleTxtDownloader(const char* addr, Receiver *rec) 
 +{
-+	this->id = id;
-+	this->OnAllDataReceived = OnAllDataReceived;
++	this->rec = rec;
++	printf("New Request! To: %s.\n", addr);
 +	NetworkHTTPSocketHandler::Connect(const_cast<char *>(addr), this);
 +}
 +
 +void SimpleTxtDownloader::OnFailure() 
 +{
-+	this->OnAllDataReceived("",this->id); // let the caller handle the fail
++	this->rec->Failed(); // let the caller handle the fail
 +	delete this; // XXX is this safe?
 +}
 +void SimpleTxtDownloader::OnReceiveData( const char *data, size_t length) 
 +{
 +	if (data == 0) 
 +	{
-+		this->OnAllDataReceived(this->data, this->id);
++		this->rec->DataReceived(this->data);
 +		delete this; // XXX is this safe?
 +		
 +	} else 
@@ -36,8 +49,16 @@ diff -r e9ed5e03dcd5 src/network/network_content.cpp
  #endif /* ENABLE_NETWORK */
 diff -r e9ed5e03dcd5 src/network/network_content.h
 --- a/src/network/network_content.h	Sun Jan 11 19:19:14 2015 +0000
-+++ b/src/network/network_content.h	Sun Jan 11 19:39:26 2015 +0000
-@@ -153,6 +153,24 @@
++++ b/src/network/network_content.h	Sun Jan 18 14:10:24 2015 +0000
+@@ -14,6 +14,7 @@
+ 
+ #include "core/tcp_content.h"
+ #include "core/tcp_http.h"
++#include "../nc_receiver.h"
+ 
+ #if defined(ENABLE_NETWORK)
+ 
+@@ -153,6 +154,23 @@
  
  void ShowMissingContentWindow(const struct GRFConfig *list);
  
@@ -49,14 +70,13 @@ diff -r e9ed5e03dcd5 src/network/network_content.h
 +*/
 +class SimpleTxtDownloader: public HTTPCallback {
 +public:
-+	SimpleTxtDownloader(const char* addr, void (*OnAllDataReceived)(std::string data, int id));
++	SimpleTxtDownloader(const char* addr, Receiver *rec);
 +	virtual void OnReceiveData( const char *data, size_t length);
 +	virtual void OnFailure(); 
 +private:
 +	NetworkHTTPContentConnecter *conn;
 +	std::string data; 
-+	int id;
-+	void (*OnAllDataReceived)(std::string data,int id);
++	Receiver *rec;
 +};
 +
  #else
