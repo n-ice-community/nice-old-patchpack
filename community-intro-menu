@@ -1,10 +1,29 @@
 # HG changeset patch
-# Parent  20318e34a0fa99d5fee4921a6dd386677cdd2d7c
+# Parent  4c043116a3a8d2933c3b9ea1f779582e98d27ff5
 
-diff -r 20318e34a0fa src/intro_gui.cpp
---- a/src/intro_gui.cpp	Wed Jan 21 21:08:31 2015 +0000
-+++ b/src/intro_gui.cpp	Wed Jan 21 22:59:28 2015 +0000
-@@ -31,14 +31,51 @@
+diff -r 4c043116a3a8 source.list
+--- a/source.list	Thu Apr 02 13:31:46 2015 +0100
++++ b/source.list	Thu Apr 02 14:41:03 2015 +0100
+@@ -55,6 +55,7 @@
+ mixer.cpp
+ music.cpp
+ nc_csettings.cpp
++nc_intro_gui.cpp
+ network/network.cpp
+ network/network_admin.cpp
+ network/network_client.cpp
+@@ -243,6 +244,7 @@
+ mixer.h
+ nc_csettings.h
+ nc_receiver.h
++nc_intro_gui.h
+ network/network.h
+ network/network_admin.h
+ network/network_base.h
+diff -r 4c043116a3a8 src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Thu Apr 02 13:31:46 2015 +0100
++++ b/src/intro_gui.cpp	Thu Apr 02 14:41:03 2015 +0100
+@@ -31,14 +31,60 @@
  #include "highscore.h"
  
  #include "widgets/intro_widget.h"
@@ -18,7 +37,7 @@ diff -r 20318e34a0fa src/intro_gui.cpp
 +#include "window_func.h" //deletewindowbyID
 +#include "console_func.h" //IConsolePrintF
 +#include "settings_func.h" //saveconfig
-+//#include "nc_intro_gui.h"
++#include "nc_intro_gui.h"
 +
  #include "safeguards.h"
  
@@ -44,8 +63,17 @@ diff -r 20318e34a0fa src/intro_gui.cpp
 +					*list->Append() = new DropDownListCharStringItem(CSettings::get().GetCommunityName(i), i, false);
 +				}
 +			break;
-+			//case:
-+			//break
++			case WID_NC_GROUP_DROPDOWN:
++			{
++				list = new DropDownList();
++				ServerGroupList* groups = CSettings::get().GetSelected()->GetGroups();
++				*selected_index = groups->SelectedIndex() +1 ;
++				*list->Append() = new DropDownListCharStringItem("None", 0, false);
++				for (uint i = 0; i < groups->Size(); i++) {
++					*list->Append() = new DropDownListCharStringItem(groups->Get(i)->display_name, i+1, false);
++				}
++			}
++			break;
 +			default:
 +			break;
 +		}
@@ -56,7 +84,7 @@ diff -r 20318e34a0fa src/intro_gui.cpp
  	SelectGameWindow(WindowDesc *desc) : Window(desc)
  	{
  		this->CreateNestedTree();
-@@ -64,6 +101,13 @@
+@@ -64,6 +110,13 @@
  	{
  		bool missing = _current_language->missing >= _settings_client.gui.missing_strings_threshold && !IsReleasedVersion();
  		this->GetWidget<NWidgetStacked>(WID_SGI_TRANSLATION_SELECTION)->SetDisplayedPlane(missing ? 0 : SZSP_NONE);
@@ -70,7 +98,7 @@ diff -r 20318e34a0fa src/intro_gui.cpp
  	}
  
  	virtual void DrawWidget(const Rect &r, int widget) const
-@@ -73,9 +117,34 @@
+@@ -73,9 +126,46 @@
  				SetDParam(0, _current_language->missing);
  				DrawStringMultiLine(r.left, r.right, r.top,  r.bottom, STR_INTRO_TRANSLATION, TC_FROMSTRING, SA_CENTER);
  				break;
@@ -78,35 +106,47 @@ diff -r 20318e34a0fa src/intro_gui.cpp
 +			//	DrawString(r.left, r.right, r.top + 3, STR_NULL, TC_FROMSTRING, SA_CENTER);
 +			//	break;
 +			default:
++			{
 +				Community* selected = CSettings::get().GetSelected();
++				if(selected == NULL) break;
 +				ServerList* list = selected->GetServerList();
 +				if(list == NULL) return;
-+				if(selected == NULL) break;
 +				if(widget >= WID_NC_LIST && widget <= WID_NC_LIST_END)
 +				{
 +					SetDParamStr(0, list->Get(widget - WID_NC_LIST)->display_name);
 +					DrawString(r.left, r.right, r.top + 3, STR_JUST_RAW_STRING, TC_BLACK, SA_CENTER);
++				}else if(widget >= WID_NC_GROUPS && widget <= WID_NC_GROUPS_END)
++				{
++					SetDParamStr(0, CSettings::get().GetSelected()->GetServerGroup()->tabs_name[widget - WID_NC_GROUPS]);
++					DrawString(r.left, r.right, r.top + 3, STR_JUST_RAW_STRING , TC_BLACK, SA_CENTER);
 +				}
++			}
 +				break;
  		}
  	}
 -
 +	virtual void SetStringParameters(int widget) const
 +	{
++		Community *selected = CSettings::get().GetSelected();
 +		switch(widget)
 +		{
 +			case WID_NC_HEADER:
-+				SetDParamStr(0, CSettings::get().GetSelected()->display_name);
++				SetDParamStr(0, selected == NULL ? "" : CSettings::get().GetSelected()->display_name);
 +			break;
 +			case WID_NC_COMMUNITY_DROPDOWN:   
-+				SetDParamStr(0, CSettings::get().GetSelected()->display_name); 
++				SetDParamStr(0, selected == NULL ? "" :CSettings::get().GetSelected()->display_name); 
++			break;
++			case WID_NC_GROUP_DROPDOWN:
++				SetDParamStr(0, selected == NULL || selected->GetGroups() == NULL ? "" :selected->GetGroups()->SelectedName());
++			break;
++			default:
 +			break;
 +		}
 +	}
  	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
  	{
  		switch (widget) {
-@@ -95,7 +164,16 @@
+@@ -95,7 +185,21 @@
  			}
  		}
  	}
@@ -119,12 +159,17 @@ diff -r 20318e34a0fa src/intro_gui.cpp
 +				DeleteWindowByClass(WC_SELECT_GAME);
 +				ShowSelectGameWindow();	
 +			break;
++			case WID_NC_GROUP_DROPDOWN:
++				CSettings::get().GetSelected()->SetGroup(index-1);
++				DeleteWindowByClass(WC_SELECT_GAME);
++				ShowSelectGameWindow();	
++			break;
 +		}
 +	}
  	virtual void OnClick(Point pt, int widget, int click_count)
  	{
  #ifdef ENABLE_NETWORK
-@@ -103,7 +181,7 @@
+@@ -103,7 +207,7 @@
  		 * creation/load windows for the network server. */
  		if (IsInsideMM(widget, WID_SGI_GENERATE_GAME, WID_SGI_EDIT_SCENARIO + 1)) _is_network_server = false;
  #endif /* ENABLE_NETWORK */
@@ -133,30 +178,36 @@ diff -r 20318e34a0fa src/intro_gui.cpp
  		switch (widget) {
  			case WID_SGI_GENERATE_GAME:
  				if (_ctrl_pressed) {
-@@ -144,10 +222,68 @@
+@@ -144,10 +248,148 @@
  				break;
  			case WID_SGI_AI_SETTINGS:     ShowAIConfigWindow(); break;
  			case WID_SGI_EXIT:            HandleExitGameRequest(); break;
 +			//community stuff
 +			case WID_NC_ACCOUNT:
-+				//ShowAccountMenu();
++				ShowAccountMenu();
 +			break;
 +			case WID_NC_LINKS:
-+				//ShowUsefulLinksList();
++				ShowUsefulLinksList();
++			break;
++			case WID_NC_ADD_COMM:
++				ShowAddCommunity();
 +			break;
 +			default:
 +				Community* selected = CSettings::get().GetSelected();
++				if(selected == NULL) break;
 +				ServerList* list = selected->GetServerList();
 +				if(widget >= WID_NC_LIST && widget <= WID_NC_LIST_END && list != NULL)
 +				{
++					if(list == NULL) break;
 +					printf("Clicked\n");
++					printf("%s\n", list->Get(widget - WID_NC_LIST)->ipv4);
 +					if (_ctrl_pressed) {
 +						NetworkClientConnectGame(list->Get(widget - WID_NC_LIST)->ipv4, COMPANY_NEW_COMPANY);
 +					}
 +					else{
 +						NetworkClientConnectGame(list->Get(widget - WID_NC_LIST)->ipv4, COMPANY_SPECTATOR);
 +					}
-+				}else if(widget == WID_NC_COMMUNITY_DROPDOWN)
++				}else if(widget == WID_NC_COMMUNITY_DROPDOWN || widget == WID_NC_GROUP_DROPDOWN)
 +				{
 +					int selected;
 +					DropDownList *list = this->BuildDropDownList(widget, &selected);
@@ -168,64 +219,126 @@ diff -r 20318e34a0fa src/intro_gui.cpp
  		}
  	}
  };
--
-+NWidgetBase *MakeServerButtons(int *biggest_index)
++NWidgetBase *MakeNCPart(int *biggest_index)
 +{
 +	Community* selected = CSettings::get().GetSelected();
-+	ServerList* list = selected->GetServerList();
-+	
-+	NWidgetVertical *ver = new NWidgetVertical;
-+	
-+	if(list == NULL || list->Size() == 0)
++	ServerList* list = NULL;
++	ServerGroup* group = NULL;
++	NWidgetVertical *main = new NWidgetVertical;
++	if(selected == NULL) // There is no communities
 +	{
-+		NWidgetBackground *leaf = new NWidgetBackground(WWT_PANEL, COLOUR_BROWN, WID_NC_SERVERS, NULL);
-+		ver->Add(leaf);
-+		return ver;
++		NWidgetLeaf* cap = new NWidgetLeaf(WWT_CAPTION, COLOUR_BROWN, WID_NC_HEADER,0x0,STR_NULL);cap->SetDataTip(STR_NC_NO_COMMUNITY,STR_NULL);
++		cap->SetFill(1,0);
++		main->Add(cap);
++		NWidgetBackground* bg = new NWidgetBackground(WWT_PANEL, COLOUR_BROWN,0x0, NULL);
++		main->Add(bg);
++		NWidgetLeaf* button = new NWidgetLeaf(WWT_PUSHTXTBTN, COLOUR_ORANGE,WID_NC_ADD_COMM,0x0,STR_NULL);
++		button->SetDataTip(STR_NC_ADD_COMM,STR_NULL);button->SetMinimalSize(158,15);button->SetFill(1,0);
++		main->Add(button);
++		*biggest_index = WID_NC_ADD_COMM;
++		return main;
 +	}
-+	int line_counter = 0;
-+	NWidgetHorizontal *hor = new NWidgetHorizontal;
-+	for(uint s = 0; s < list->Size(); s++,line_counter++)
-+	{
-+		if ( line_counter%5 == 0 && line_counter>0) 
-+		{
-+			ver->Add(hor);
-+			hor = new NWidgetHorizontal();
-+		}
-+		NWidgetLeaf *leaf = new NWidgetLeaf(WWT_PUSHTXTBTN, COLOUR_ORANGE, WID_NC_LIST + s, 0x0,STR_NULL);
-+		leaf->SetMinimalSize(75, 15);
-+		leaf->SetPadding(3,2,0,2);
-+		hor->Add(leaf);
-+	}
+ 
++	list = selected->GetServerList();
++	group = selected->GetServerGroup();
++
++	NWidgetLeaf* cap = new NWidgetLeaf(WWT_CAPTION, COLOUR_BROWN, WID_NC_HEADER,0x0,STR_NULL);cap->SetDataTip(STR_NC_COMMUNITY_SECTION,STR_NULL);
++	cap->SetFill(1,0);
++	main->Add(cap);
++	NWidgetBackground* bg = new NWidgetBackground(WWT_PANEL, COLOUR_BROWN,0x0, NULL);
++	main->Add(bg);
++	NWidgetVertical* ver = new NWidgetVertical(NC_EQUALSIZE);
++	bg->Add(ver);
++	NWidgetHorizontal* hor = new NWidgetHorizontal();
++	NWidgetLeaf* drop = new NWidgetLeaf(WWT_DROPDOWN, COLOUR_WHITE, WID_NC_COMMUNITY_DROPDOWN, 0x0, STR_NULL);drop->SetDataTip(STR_BLACK_RAW_STRING,STR_NULL);
++	drop->SetFill(1,0);drop->SetPadding(4,4,4,4);
++	NWidgetLeaf* addc_btn = new NWidgetLeaf(WWT_PUSHTXTBTN, COLOUR_WHITE,WID_NC_ADD_COMM,0x0,STR_NULL);
++	addc_btn->SetDataTip(STR_NC_ADD_COMM,STR_NULL);addc_btn->SetMinimalSize(0,15);
++	hor->Add(drop);hor->Add(addc_btn);
 +	ver->Add(hor);
-+	*biggest_index = (WID_NC_LIST - 1) + list->Size();	
-+	return ver;
++	NWidgetLeaf* drop_mode = new NWidgetLeaf(WWT_DROPDOWN, COLOUR_WHITE, WID_NC_GROUP_DROPDOWN, 0x0, STR_NULL);
++	drop_mode->SetDataTip(STR_BLACK_RAW_STRING,STR_NULL);drop_mode->SetFill(1,0);drop_mode->SetPadding(4,4,4,4);
++	ver->Add(drop_mode);
++	ver->SetPadding(10,5,10,5);
++
++	if( !(list == NULL || list->Size() == 0))
++	{
++		if(group != NULL)
++		{
++			int line_counter = 0;
++			for(uint k = 0; k < group->tabs_name.Length(); k++)
++			{
++				NWidgetLeaf *cap = new NWidgetLeaf(WWT_CAPTION,group->tabs_colour[k],WID_NC_GROUPS +k,0x0,STR_NULL);
++				cap->SetFill(1,0);
++				ver->Add(cap);
++				NWidgetBackground* bg = new NWidgetBackground(WWT_PANEL,group->bg_colour[k],-1);
++				ver->Add(bg);
++				NWidgetVertical* cont = new NWidgetVertical(NC_EQUALSIZE);
++				bg->Add(cont);
++				line_counter = 0;
++				hor = new NWidgetHorizontal;
++				for(uint s = 0; s < group->servers_within_group[k]; s++)
++				{
++					if ( line_counter%5 == 0 && line_counter>0) 
++					{
++						cont->Add(hor);
++						hor = new NWidgetHorizontal();
++					}
++					NWidgetLeaf *leaf = new NWidgetLeaf(WWT_PUSHTXTBTN, group->server_colour[group->getServer(k,s)], WID_NC_LIST + list->GetPosByUid(group->getServerUid(k,s)), 0x0,STR_NULL);
++					leaf->SetMinimalSize(75, 15);
++					leaf->SetPadding(3,2,0,2);
++					hor->Add(leaf);
++					line_counter++;
++				}
++				cont->Add(hor);
++			}
++		}else
++		{
++			int line_counter = 0;
++			hor = new NWidgetHorizontal;
++			for(uint s = 0; s < list->Size(); s++,line_counter++)
++			{
++				if ( line_counter%5 == 0 && line_counter>0) 
++				{
++					ver->Add(hor);
++					hor = new NWidgetHorizontal();
++				}
++				NWidgetLeaf *leaf = new NWidgetLeaf(WWT_PUSHTXTBTN, COLOUR_ORANGE, WID_NC_LIST + s, 0x0,STR_NULL);
++				leaf->SetMinimalSize(75, 15);
++				leaf->SetPadding(3,2,0,2);
++				hor->Add(leaf);
++			}
++			ver->Add(hor);
++		}
++	}
++	
++	main->Add(new NWidgetBackground(WWT_PANEL, COLOUR_BROWN,0x0, NULL));
++	hor = new NWidgetHorizontal(NC_EQUALSIZE);
++	NWidgetLeaf* acc_btn = new 	NWidgetLeaf(WWT_PUSHTXTBTN, COLOUR_ORANGE,WID_NC_ACCOUNT,0x0,STR_NULL);
++	acc_btn->SetDataTip(STR_NC_INTRO_ACCOUNT_DETAILS,STR_NULL);acc_btn->SetMinimalSize(158,15);acc_btn->SetFill(1,0);
++	NWidgetLeaf* link_btn = new NWidgetLeaf(WWT_PUSHTXTBTN, COLOUR_ORANGE,WID_NC_LINKS,0x0,STR_NULL);link_btn->SetDataTip(STR_NC_INTRO_LINKS,STR_NULL);
++	link_btn->SetMinimalSize(158,15);link_btn->SetFill(1,0);
++	hor->Add(acc_btn);
++	hor->Add(link_btn);
++	main->Add(hor);
++	*biggest_index = (WID_NC_LINKS);	
++	return main;
 +}
  static const NWidgetPart _nested_select_game_widgets[] = {
  	NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_INTRO_CAPTION, STR_NULL),
  	NWidget(WWT_PANEL, COLOUR_BROWN),
-@@ -248,6 +384,18 @@
+@@ -248,6 +490,7 @@
  	NWidget(NWID_SPACER), SetMinimalSize(0, 8),
  
  	EndContainer(),
-+	NWidget(WWT_CAPTION, COLOUR_BROWN, WID_NC_HEADER), SetDataTip(STR_JUST_RAW_STRING, STR_NULL),
-+	NWidget(WWT_PANEL, COLOUR_BROWN),
-+	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE), SetFill(1, 0),SetPadding(4),
-+	NWidget(WWT_DROPDOWN, COLOUR_WHITE, WID_NC_COMMUNITY_DROPDOWN), SetDataTip(STR_BLACK_RAW_STRING, STR_NULL),SetFill(1, 0),SetPadding(4),
-+	//NWidget(WWT_DROPDOWN, COLOUR_WHITE, WID_NC_GROUP_DROPDOWN),SetDataTip(STR_BLACK_RAW_STRING, STR_NULL),SetFill(1, 0),SetPadding(4),
-+	EndContainer(),
-+	NWidgetFunction(MakeServerButtons),
-+	NWidget(WWT_PANEL, COLOUR_BROWN),
-+	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),SetPadding(10,10,5,10),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_ORANGE,WID_NC_ACCOUNT),SetDataTip(STR_NC_INTRO_ACCOUNT_DETAILS,STR_NULL), SetMinimalSize(158,15),SetFill(1,0),
-+		NWidget(WWT_PUSHTXTBTN, COLOUR_ORANGE,WID_NC_LINKS), SetDataTip(STR_NC_INTRO_LINKS,STR_NULL), SetMinimalSize(158,15),SetFill(1,0),
-+	EndContainer(),
++	NWidgetFunction(MakeNCPart),
  };
  
  static WindowDesc _select_game_desc(
-diff -r 20318e34a0fa src/lang/english.txt
---- a/src/lang/english.txt	Wed Jan 21 21:08:31 2015 +0000
-+++ b/src/lang/english.txt	Wed Jan 21 22:59:28 2015 +0000
-@@ -5029,3 +5029,36 @@
+diff -r 4c043116a3a8 src/lang/english.txt
+--- a/src/lang/english.txt	Thu Apr 02 13:31:46 2015 +0100
++++ b/src/lang/english.txt	Thu Apr 02 14:41:03 2015 +0100
+@@ -5032,3 +5032,42 @@
  
  # Town gui extended
  STR_TOWN_VIEW_GROWTH                                            :{BLACK}GR: {ORANGE}{COMMA}{BLACK} next: {ORANGE}{COMMA} {BLACK} RH: {ORANGE}{COMMA} {BLACK}flag {ORANGE}{COMMA}  {BLACK}Fund: {ORANGE}{COMMA}{SILVER}m
@@ -233,40 +346,68 @@ diff -r 20318e34a0fa src/lang/english.txt
 +# intro gui
 +STR_NC_INTRO_ACCOUNT_DETAILS                                    :{BLACK}Account details
 +STR_NC_INTRO_LINKS                                              :{BLACK}Useful links
-+STR_CC_ACCOUNT_DETAILS_CAPTION                                  :{BLACK}{STRING}'s Account Details
-+STR_CC_LINKS_CAPTION                                            :{BLACK}{STRING}'s Useful Links
++STR_NC_NO_COMMUNITY                                             :{BLACK}No community found.
++STR_NC_COMMUNITY_SECTION                                        :{BLACK}Community Section
++STR_NC_ADD_COMM                                                 :{BLACK}Add Community
++STR_NC_COMMUNITY                                                :{BLACK}Community
++STR_NC_LINK                                                     :{BLACK}Link
++STR_NC_CONFIRM                                                  :{BLACK}Confirm
++STR_NC_ACCOUNT_DETAILS_CAPTION                                  :{BLACK}{RAW_STRING}'s Account Details
++STR_NC_LINKS_CAPTION                                            :{BLACK}{RAW_STRING}'s Useful Links
 +
-+STR_CC_USER                                                     :{WHITE}Username:{NBSP}{NBSP}
-+STR_CC_PASSWORD                                                 :{WHITE}Password:{NBSP}{NBSP}
-+STR_CC_SET                                                      :{WHITE}Set...
-+STR_CC_REGULAR_USER                                             :{BLACK}Regular User Account:
-+STR_CC_ADMIN_USER                                               :{BLACK}Admin User Account:
-+STR_CC_USER_DIALOG                                              :{BLACK}Your Username:
-+STR_CC_AUSER_DIALOG                                             :{BLACK}Your Admin Username:
-+STR_CC_PASSWORD_DIALOG                                          :{BLACK}Your Password:
-+STR_CC_APASSWORD_DIALOG                                         :{BLACK}Your Admin Password:
-+STR_CC_PASSWORD_SET                                             :saved
-+STR_CC_PASSWORD_EMPTY                                           :EMPTY
-+STR_CC_CURRENT_NICK                                             :{WHITE}{RAW_STRING}
-+STR_CC_BLACK_RAW                                                :{BLACK}{RAW_STRING}
-+STR_CC_BLACK_STRING                                             :{BLACK}{STRING}
-+STR_CC_WEBSITE                                                  :{WHITE}{STRING}'s Main Website
-+STR_CC_WEBSITE_DESC                                             :{BLACK}Here you can find the latest news about the community.
-+STR_CC_FORUM                                                    :{WHITE}{STRING}'s Forum
-+STR_CC_FORUM_DESC                                               :{BLACK}Here you can interact with the others users, discuss the game and give us feedback!
-+STR_CC_WIKI                                                     :{WHITE}{STRING}'s Wiki
-+STR_CC_WIKI_DESC                                                :{BLACK}Here you can find, errr, things?
-+STR_CC_RULES                                                    :{WHITE}Rules
-+STR_CC_RULES_DESC                                               :{BLACK}{STRING}'s servers rules.
-+STR_CC_SERVERS                                                  :{WHITE}{STRING}'s Servers List
-+STR_CC_SERVERS_DESC                                             :{BLACK}Here you can find the server list and its state!
-+STR_CC_CONTACTS                                                 :{WHITE}Contacts
-+STR_CC_CONTACTS_DESC                                            :{BLACK}If you need to reach {STRING}'s admins, try here!
-diff -r 20318e34a0fa src/nc_intro_gui.cpp
++STR_NC_USER                                                     :{WHITE}Username:{NBSP}{NBSP}
++STR_NC_PASSWORD                                                 :{WHITE}Password:{NBSP}{NBSP}
++STR_NC_SET                                                      :{WHITE}Set...
++STR_NC_REGULAR_USER                                             :{BLACK}Regular User Account:
++STR_NC_ADMIN_USER                                               :{BLACK}Admin User Account:
++STR_NC_USER_DIALOG                                              :{BLACK}Your Username:
++STR_NC_AUSER_DIALOG                                             :{BLACK}Your Admin Username:
++STR_NC_PASSWORD_DIALOG                                          :{BLACK}Your Password:
++STR_NC_APASSWORD_DIALOG                                         :{BLACK}Your Admin Password:
++STR_NC_PASSWORD_SET                                             :saved
++STR_NC_PASSWORD_EMPTY                                           :EMPTY
++STR_NC_CURRENT_NICK                                             :{WHITE}{RAW_STRING}
++STR_NC_BLACK_RAW                                                :{BLACK}{RAW_STRING}
++STR_NC_BLACK_STRING                                             :{BLACK}{RAW_STRING}
++STR_NC_WEBSITE                                                  :{WHITE}{RAW_STRING}'s Main Website
++STR_NC_WEBSITE_DESC                                             :{BLACK}Here you can find the latest news about the community.
++STR_NC_FORUM                                                    :{WHITE}{RAW_STRING}'s Forum
++STR_NC_FORUM_DESC                                               :{BLACK}Here you can interact with the others users, discuss the game and give us feedback!
++STR_NC_WIKI                                                     :{WHITE}{RAW_STRING}'s Wiki
++STR_NC_WIKI_DESC                                                :{BLACK}Here you can find, errr, things?
++STR_NC_RULES                                                    :{WHITE}Rules
++STR_NC_RULES_DESC                                               :{BLACK}{RAW_STRING}'s servers rules.
++STR_NC_SERVERS                                                  :{WHITE}{RAW_STRING}'s Servers List
++STR_NC_SERVERS_DESC                                             :{BLACK}Here you can find the server list and its state!
++STR_NC_CONTACTS                                                 :{WHITE}Contacts
++STR_NC_CONTACTS_DESC                                            :{BLACK}If you need to reach {RAW_STRING}'s admins, try here!
+diff -r 4c043116a3a8 src/nc_csettings.cpp
+--- a/src/nc_csettings.cpp	Thu Apr 02 13:31:46 2015 +0100
++++ b/src/nc_csettings.cpp	Thu Apr 02 14:41:03 2015 +0100
+@@ -519,7 +519,7 @@
+ 		if(data[i]->server_uid.Length() != 0)
+ 		{
+ 			length = 0;
+-			for(uint j = 0, uint k = 0, uint t = data[i]->servers_within_group[0]; j < data[i]->server_uid.Length(); j++)
++			for(uint j = 0,  k = 0, t = data[i]->servers_within_group[0]; j < data[i]->server_uid.Length(); j++)
+ 			{
+ 				if(j == t)
+ 				{
+@@ -534,7 +534,7 @@
+ 		if(data[i]->server_colour.Length() != 0)
+ 		{
+ 			length = 0;
+-			for(uint j = 0, uint k = 0, uint t = data[i]->servers_within_group[0]; j < data[i]->server_colour.Length(); j++)
++			for(uint j = 0, k = 0,t = data[i]->servers_within_group[0]; j < data[i]->server_colour.Length(); j++)
+ 			{
+ 				if(j == t)
+ 				{
+diff -r 4c043116a3a8 src/nc_intro_gui.cpp
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_intro_gui.cpp	Wed Jan 21 22:59:28 2015 +0000
-@@ -0,0 +1,309 @@
-+#include "comc_intro_gui.h"
++++ b/src/nc_intro_gui.cpp	Thu Apr 02 14:41:03 2015 +0100
+@@ -0,0 +1,339 @@
++#include "nc_intro_gui.h"
++#include "nc_csettings.h"
 +#include "strings_func.h"
 +#include "settings_type.h"
 +#include "table/strings.h"
@@ -286,6 +427,7 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +#include "window_gui.h"
 +#include "widget_type.h"
 +#include "window_func.h"
++#include "querystring_gui.h"
 +/******
 +	Intro Gui Support Windows
 +*/
@@ -338,44 +480,44 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +static const NWidgetPart _nested_account_menu_widgets[] = {
 +	NWidget(NWID_HORIZONTAL),
 +		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
-+		NWidget(WWT_CAPTION, COLOUR_BROWN,WID_AM_CAPTION), SetDataTip(STR_CC_ACCOUNT_DETAILS_CAPTION , STR_NULL),
++		NWidget(WWT_CAPTION, COLOUR_BROWN,WID_AM_CAPTION), SetDataTip(STR_NC_ACCOUNT_DETAILS_CAPTION , STR_NULL),
 +	EndContainer(),
 +	NWidget(WWT_PANEL, COLOUR_GREY),
 +	NWidget(NWID_VERTICAL),SetPadding(5),
-+		NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_CC_REGULAR_USER,STR_NULL),
++		NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_REGULAR_USER,STR_NULL),
 +		NWidget(NWID_HORIZONTAL),SetPadding(0,0,0,20),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_CC_USER,STR_NULL),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_USER),SetDataTip(STR_CC_BLACK_RAW,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_USER,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_USER),SetDataTip(STR_NC_BLACK_RAW,STR_NULL),
 +			NWidget(NWID_SPACER),SetFill(1,0),SetMinimalSize(200,0),
-+			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_USER_SET),SetDataTip(STR_CC_SET,STR_NULL),
++			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_USER_SET),SetDataTip(STR_NC_SET,STR_NULL),
 +		EndContainer(),
 +		NWidget(NWID_HORIZONTAL),SetPadding(5,0,0,20),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_CC_PASSWORD,STR_NULL),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_PASSWORD),SetDataTip(STR_CC_BLACK_STRING,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_PASSWORD,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_PASSWORD),SetDataTip(STR_NC_BLACK_STRING,STR_NULL),
 +			NWidget(NWID_SPACER),SetFill(1,0),SetMinimalSize(200,0),
-+			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_PASSWORD_SET),SetDataTip(STR_CC_SET,STR_NULL),
++			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_PASSWORD_SET),SetDataTip(STR_NC_SET,STR_NULL),
 +		EndContainer(),
 +	EndContainer(),
 +	NWidget(WWT_PANEL, COLOUR_GREY),SetFill(1,0),
 +	NWidget(NWID_VERTICAL),SetPadding(5),
-+		NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_CC_ADMIN_USER,STR_NULL),
++		NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_ADMIN_USER,STR_NULL),
 +		NWidget(NWID_HORIZONTAL),SetPadding(0,0,0,20),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_CC_USER,STR_NULL),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_AUSER),SetDataTip(STR_CC_BLACK_RAW,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_USER,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_AUSER),SetDataTip(STR_NC_BLACK_RAW,STR_NULL),
 +			NWidget(NWID_SPACER),SetFill(1,0),SetMinimalSize(200,0),
-+			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_AUSER_SET),SetDataTip(STR_CC_SET,STR_NULL),
++			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_AUSER_SET),SetDataTip(STR_NC_SET,STR_NULL),
 +		EndContainer(),
 +		NWidget(NWID_HORIZONTAL),SetPadding(5,0,0,20),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_CC_PASSWORD,STR_NULL),
-+			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_APASSWORD),SetDataTip(STR_CC_BLACK_STRING,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_PASSWORD,STR_NULL),
++			NWidget(WWT_TEXT,COLOUR_ORANGE,WID_AM_APASSWORD),SetDataTip(STR_NC_BLACK_STRING,STR_NULL),
 +			NWidget(NWID_SPACER),SetFill(1,0),SetMinimalSize(200,0),
-+			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_APASSWORD_SET),SetDataTip(STR_CC_SET,STR_NULL),
++			NWidget(WWT_PUSHTXTBTN,COLOUR_BROWN,WID_AM_APASSWORD_SET),SetDataTip(STR_NC_SET,STR_NULL),
 +		EndContainer(),
 +	EndContainer(),
 +};
 +static WindowDesc _account_menu_desc(
 +	WDP_CENTER, NULL, 0, 0,
-+	WC_CC_ACCOUNT_MENU, WC_NONE,
++	WC_NC_ACCOUNT_MENU, WC_NONE,
 +	0,
 +	_nested_account_menu_widgets, lengthof(_nested_account_menu_widgets)
 +);
@@ -418,7 +560,7 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +		extern void OpenBrowser(const char *url);
 +		switch(widget)
 +		{
-+			case WID_LL_WEBSITE:
++			/*case WID_LL_WEBSITE:
 +				if(_settings_client.gui.community == Community::N_ICE)
 +					OpenBrowser("http://www.n-ice.org/openttd");
 +				else
@@ -453,7 +595,7 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +					OpenBrowser("http://openttd.n-ice.org/contact.php");
 +				else
 +					OpenBrowser("http://openttd.btpro.nl/index.php?option=com_content&view=article&id=102&Itemid=560");
-+			break;
++			break;*/
 +			default:
 +			break;
 +		}
@@ -461,57 +603,22 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +	
 +	virtual void SetStringParameters(int widget) const
 +	{
++		Community* selected = CSettings::get().GetSelected();
++		if(selected == NULL)
++			return;
 +		switch (widget) 
 +		{
++			case WID_LL_RULES_TXT:
++			case WID_LL_SERVERS:
++			case WID_LL_CONTACTS_TXT:
++			case WID_LL_WIKI_TXT:
++ 			case WID_LL_WIKI:
++			case WID_LL_FORUM:
++			case WID_LL_WEBSITE:
 +			case WID_LL_CAPTION:
 +			{
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
++				SetDParamStr(0,selected->display_name);
 +			}
-+			break;
-+			case WID_LL_WEBSITE:
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
-+			break;
-+	      case WID_LL_FORUM:
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
-+	      break;
-+	      case WID_LL_WIKI:
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
-+	      break;
-+	      case WID_LL_WIKI_TXT:
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
-+	      break;
-+			case WID_LL_RULES_TXT:
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
-+			break;
-+	      case WID_LL_SERVERS:
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
-+			break;
-+	      case WID_LL_CONTACTS_TXT:	
-+				if(_settings_client.gui.community == Community::N_ICE)
-+					SetDParam(0,STR_CC_COMMUNITY_NICE);
-+				else
-+					SetDParam(0,STR_CC_COMMUNITY_BTPRO);
 +			break;
 +			default:
 +			break;
@@ -522,51 +629,51 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +static const NWidgetPart _nested_links_list_widgets[] = {
 +	NWidget(NWID_HORIZONTAL),
 +		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
-+		NWidget(WWT_CAPTION, COLOUR_BROWN,WID_LL_CAPTION), SetDataTip(STR_CC_LINKS_CAPTION, STR_NULL),
++		NWidget(WWT_CAPTION, COLOUR_BROWN,WID_LL_CAPTION), SetDataTip(STR_NC_LINKS_CAPTION, STR_NULL),
 +	EndContainer(),
 +	NWidget(WWT_PANEL, COLOUR_GREY),
 +	NWidget(NWID_VERTICAL),SetPadding(7),
 +		NWidget(NWID_HORIZONTAL),
-+			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_WEBSITE),SetDataTip(STR_CC_WEBSITE,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_WEBSITE),SetDataTip(STR_NC_WEBSITE,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +			NWidget(NWID_SPACER),SetFill(0,1),
 +		EndContainer(),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_WEBSITE_TXT),SetDataTip(STR_CC_WEBSITE_DESC,STR_NULL),SetPadding(0,0,0,15),
++		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_WEBSITE_TXT),SetDataTip(STR_NC_WEBSITE_DESC,STR_NULL),SetPadding(0,0,0,15),
 +		NWidget(NWID_SPACER),SetMinimalSize(0,6),SetFill(1,0),
 +		NWidget(NWID_HORIZONTAL),
-+			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_FORUM),SetDataTip(STR_CC_FORUM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_FORUM),SetDataTip(STR_NC_FORUM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +			NWidget(NWID_SPACER),SetFill(0,1),
 +		EndContainer(),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_FORUM_TXT),SetDataTip(STR_CC_FORUM_DESC,STR_NULL),SetPadding(0,0,0,15),
++		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_FORUM_TXT),SetDataTip(STR_NC_FORUM_DESC,STR_NULL),SetPadding(0,0,0,15),
 +		NWidget(NWID_SPACER),SetMinimalSize(0,6),SetFill(1,0),
 +		NWidget(NWID_HORIZONTAL),
-+			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_WIKI),SetDataTip(STR_CC_WIKI,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_WIKI),SetDataTip(STR_NC_WIKI,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +			NWidget(NWID_SPACER),SetFill(0,1),
 +		EndContainer(),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_WIKI_TXT),SetDataTip(STR_CC_WIKI_DESC,STR_NULL),SetPadding(0,0,0,15),
++		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_WIKI_TXT),SetDataTip(STR_NC_WIKI_DESC,STR_NULL),SetPadding(0,0,0,15),
 +		NWidget(NWID_SPACER),SetMinimalSize(0,6),SetFill(1,0),
 +		NWidget(NWID_HORIZONTAL),
-+			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_RULES),SetDataTip(STR_CC_RULES,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_RULES),SetDataTip(STR_NC_RULES,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +			NWidget(NWID_SPACER),SetFill(0,1),
 +		EndContainer(),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_RULES_TXT),SetDataTip(STR_CC_RULES_DESC,STR_NULL),SetPadding(0,0,0,15),
++		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_RULES_TXT),SetDataTip(STR_NC_RULES_DESC,STR_NULL),SetPadding(0,0,0,15),
 +		NWidget(NWID_SPACER),SetMinimalSize(0,6),SetFill(1,0),
 +		NWidget(NWID_HORIZONTAL),
-+			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_SERVERS),SetDataTip(STR_CC_SERVERS,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_SERVERS),SetDataTip(STR_NC_SERVERS,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +			NWidget(NWID_SPACER),SetFill(0,1),
 +		EndContainer(),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_SERVERS_TXT),SetDataTip(STR_CC_SERVERS_DESC,STR_NULL),SetPadding(0,0,0,15),
++		NWidget(WWT_TEXT,COLOUR_BEGIN,WID_LL_SERVERS_TXT),SetDataTip(STR_NC_SERVERS_DESC,STR_NULL),SetPadding(0,0,0,15),
 +		NWidget(NWID_SPACER),SetMinimalSize(0,6),SetFill(1,0),
 +		NWidget(NWID_HORIZONTAL),
-+			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_CONTACTS),SetDataTip(STR_CC_CONTACTS,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++			NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_LL_CONTACTS),SetDataTip(STR_NC_CONTACTS,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +			NWidget(NWID_SPACER),SetFill(0,1),
 +		EndContainer(),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN, WID_LL_CONTACTS_TXT),SetDataTip(STR_CC_CONTACTS_DESC,STR_NULL),SetPadding(0,0,0,15),
++		NWidget(WWT_TEXT,COLOUR_BEGIN, WID_LL_CONTACTS_TXT),SetDataTip(STR_NC_CONTACTS_DESC,STR_NULL),SetPadding(0,0,0,15),
 +		NWidget(NWID_SPACER),SetMinimalSize(0,6),SetFill(1,0),	
 +	EndContainer(),
 +};
 +static WindowDesc _links_list_desc(
 +	WDP_CENTER, NULL, 0, 0,
-+	WC_CC_LINKS_LIST, WC_NONE,
++	WC_NC_LINKS_LIST, WC_NONE,
 +	0,
 +	_nested_links_list_widgets, lengthof(_nested_links_list_widgets)
 +);
@@ -575,42 +682,130 @@ diff -r 20318e34a0fa src/nc_intro_gui.cpp
 +{
 +	AllocateWindowDescFront<LinksListGui>(&_links_list_desc, 0);
 +} 
-diff -r 20318e34a0fa src/nc_intro_gui.h
++/*
++	ADD COMMUNITY
++*/
++enum AddCommunityWidgets
++{
++	WID_AC_CAPTION,
++	WID_AC_NAME,
++	WID_AC_LINK,
++	WID_AC_CONFIRM,	
++};
++class AddCommunityGui : public Window
++{
++	QueryString name_editbox; ///< Message editbox.
++	QueryString link_editbox;    ///< Editbox.
++	public:
++	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), name_editbox(50),link_editbox(200) 
++	{
++		this->querystrings[WID_AC_NAME] = &this->name_editbox;
++		this->querystrings[WID_AC_LINK] = &this->link_editbox;
++		this->InitNested(window_number);
++		this->SetFocusedWidget(WID_AC_NAME);
++	}
++	virtual void DrawWidget(const Rect &r, int widget) const
++	{
++	}
++	virtual void OnClick(Point pt, int widget, int click_count)
++	{
++		switch(widget)
++		{
++			case WID_AC_CONFIRM:
++				CSettings::get().AddCommunity(name_editbox.GetText(),link_editbox.GetText());
++			break;
++		}
++	}
++	
++
++	
++};
++static const NWidgetPart _nested_add_comm_widgets[] = {
++	NWidget(NWID_HORIZONTAL),
++		NWidget(WWT_CLOSEBOX, COLOUR_ORANGE),
++		NWidget(WWT_CAPTION, COLOUR_ORANGE,WID_LL_CAPTION), SetDataTip(STR_NC_ADD_COMM, STR_NULL),SetMinimalSize(300,20),
++	EndContainer(),
++	NWidget(WWT_PANEL, COLOUR_WHITE),
++	NWidget(NWID_VERTICAL),SetPadding(7),
++		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_COMMUNITY,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_NAME), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
++		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_LINK,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_LINK), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
++		NWidget(WWT_TEXTBTN,COLOUR_ORANGE,WID_AC_CONFIRM),SetDataTip(STR_NC_CONFIRM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
++	EndContainer(),
++};
++static WindowDesc _add_comm_desc(
++	WDP_CENTER, NULL, 0, 0,
++	WC_NC_ADD_COMM, WC_NONE,
++	0,
++	_nested_add_comm_widgets, lengthof(_nested_add_comm_widgets)
++);
++
++void ShowAddCommunity()
++{
++	AllocateWindowDescFront<AddCommunityGui>(&_add_comm_desc, 0);
++} 
+diff -r 4c043116a3a8 src/nc_intro_gui.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_intro_gui.h	Wed Jan 21 22:59:28 2015 +0000
-@@ -0,0 +1,8 @@
++++ b/src/nc_intro_gui.h	Thu Apr 02 14:41:03 2015 +0100
+@@ -0,0 +1,9 @@
 +#ifndef COMC_INTRO_GUI_H
 +#define COMC_INTRO_GUI_H
 +#include "stdafx.h"
 +
 +void ShowAccountMenu();
 +void ShowUsefulLinksList(); 
++void ShowAddCommunity(); 
 +
 +#endif
-diff -r 20318e34a0fa src/widgets/intro_widget.h
---- a/src/widgets/intro_widget.h	Wed Jan 21 21:08:31 2015 +0000
-+++ b/src/widgets/intro_widget.h	Wed Jan 21 22:59:28 2015 +0000
-@@ -33,6 +33,23 @@
+diff -r 4c043116a3a8 src/widgets/intro_widget.h
+--- a/src/widgets/intro_widget.h	Thu Apr 02 13:31:46 2015 +0100
++++ b/src/widgets/intro_widget.h	Thu Apr 02 14:41:03 2015 +0100
+@@ -33,6 +33,25 @@
  	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
  	WID_SGI_AI_SETTINGS,           ///< AI button.
  	WID_SGI_EXIT,                  ///< Exit button.
 +	WID_NC_HEADER,
++	WID_NC_ADD_COMM,
 +	WID_NC_COMMUNITY_DROPDOWN,
 +	WID_NC_GROUP_DROPDOWN,
 +	WID_NC_SERVERS,
 +	
-+	WID_SERVERS,
 +	WID_NC_LIST,
 +	WID_NC_LIST_END = WID_NC_LIST + 50, 
++	WID_NC_GROUPS,
++	WID_NC_GROUPS_END = WID_NC_GROUPS + 50, 
 +	
 +	WID_NC_ACCOUNT,
 +	WID_NC_LINKS,
 +};
 + 
 +enum SelectGameQuery {
-+	SGQ_CC_USER,
-+	SGQ_CC_PASSWORD,
++	SGQ_NC_USER,
++	SGQ_NC_PASSWORD,
  };
  
 +
  #endif /* WIDGETS_INTRO_WIDGET_H */
+diff -r 4c043116a3a8 src/window_type.h
+--- a/src/window_type.h	Thu Apr 02 13:31:46 2015 +0100
++++ b/src/window_type.h	Thu Apr 02 14:41:03 2015 +0100
+@@ -682,6 +682,18 @@
+ 	 *   - 0 = #SavePresetWidgets
+ 	 */
+ 	WC_SAVE_PRESET,
++	/*
++	* Account Menu window
++	*/
++	WC_NC_ACCOUNT_MENU,
++	/*
++	* Links list window
++	*/
++	WC_NC_LINKS_LIST,
++	/*
++	* Add Community window
++	*/
++	WC_NC_ADD_COMM,
+ 
+ 	WC_INVALID = 0xFFFF, ///< Invalid window.
+ };
