@@ -1,6 +1,16 @@
 # HG changeset patch
+<<<<<<< local
+# Parent  29e0552d3ea4b59e6d29df6495487ca4768a61f1
+=======
 # Parent  8a569cf4a63960436c42cf132550477b03b103ac
+>>>>>>> other
 
+<<<<<<< local
+diff -r 29e0552d3ea4 src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Sat Feb 28 20:12:34 2015 +0000
++++ b/src/intro_gui.cpp	Fri Apr 03 09:57:22 2015 +0100
+@@ -31,14 +31,51 @@
+=======
 diff -r 8a569cf4a639 source.list
 --- a/source.list	Thu Apr 02 21:37:45 2015 +0100
 +++ b/source.list	Thu Apr 02 22:28:21 2015 +0100
@@ -24,6 +34,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 --- a/src/intro_gui.cpp	Thu Apr 02 21:37:45 2015 +0100
 +++ b/src/intro_gui.cpp	Thu Apr 02 22:28:21 2015 +0100
 @@ -31,14 +31,60 @@
+>>>>>>> other
  #include "highscore.h"
  
  #include "widgets/intro_widget.h"
@@ -335,10 +346,17 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  };
  
  static WindowDesc _select_game_desc(
+<<<<<<< local
+diff -r 29e0552d3ea4 src/lang/english.txt
+--- a/src/lang/english.txt	Sat Feb 28 20:12:34 2015 +0000
++++ b/src/lang/english.txt	Fri Apr 03 09:57:22 2015 +0100
+@@ -5029,3 +5029,36 @@
+=======
 diff -r 8a569cf4a639 src/lang/english.txt
 --- a/src/lang/english.txt	Thu Apr 02 21:37:45 2015 +0100
 +++ b/src/lang/english.txt	Thu Apr 02 22:28:21 2015 +0100
 @@ -5032,3 +5032,21 @@
+>>>>>>> other
  
  # Town gui extended
  STR_TOWN_VIEW_GROWTH                                            :{BLACK}GR: {ORANGE}{COMMA}{BLACK} next: {ORANGE}{COMMA} {BLACK} RH: {ORANGE}{COMMA} {BLACK}flag {ORANGE}{COMMA}  {BLACK}Fund: {ORANGE}{COMMA}{SILVER}m
@@ -355,17 +373,64 @@ diff -r 8a569cf4a639 src/lang/english.txt
 +STR_NC_ACCOUNT_DETAILS_CAPTION                                  :{BLACK}{RAW_STRING}'s Account Details
 +STR_NC_LINKS_CAPTION                                            :{BLACK}{RAW_STRING}'s Useful Links
 +
+<<<<<<< local
++STR_CC_USER                                                     :{WHITE}Username:{NBSP}{NBSP}
++STR_CC_PASSWORD                                                 :{WHITE}Password:{NBSP}{NBSP}
++STR_CC_SET                                                      :{WHITE}Set...
++STR_CC_REGULAR_USER                                             :{BLACK}Regular User Account:
++STR_CC_ADMIN_USER                                               :{BLACK}Admin User Account:
++STR_CC_USER_DIALOG                                              :{BLACK}Your Username:
++STR_CC_AUSER_DIALOG                                             :{BLACK}Your Admin Username:
++STR_CC_PASSWORD_DIALOG                                          :{BLACK}Your Password:
++STR_CC_APASSWORD_DIALOG                                         :{BLACK}Your Admin Password:
++STR_CC_PASSWORD_SET                                             :saved
++STR_CC_PASSWORD_EMPTY                                           :EMPTY
++STR_CC_CURRENT_NICK                                             :{WHITE}{RAW_STRING}
++STR_CC_BLACK_RAW                                                :{BLACK}{RAW_STRING}
++STR_CC_BLACK_STRING                                             :{BLACK}{STRING}
++STR_CC_WEBSITE                                                  :{WHITE}{STRING}'s Main Website
++STR_CC_WEBSITE_DESC                                             :{BLACK}Here you can find the latest news about the community.
++STR_CC_FORUM                                                    :{WHITE}{STRING}'s Forum
++STR_CC_FORUM_DESC                                               :{BLACK}Here you can interact with the others users, discuss the game and give us feedback!
++STR_CC_WIKI                                                     :{WHITE}{STRING}'s Wiki
++STR_CC_WIKI_DESC                                                :{BLACK}Here you can find, errr, things?
++STR_CC_RULES                                                    :{WHITE}Rules
++STR_CC_RULES_DESC                                               :{BLACK}{STRING}'s servers rules.
++STR_CC_SERVERS                                                  :{WHITE}{STRING}'s Servers List
++STR_CC_SERVERS_DESC                                             :{BLACK}Here you can find the server list and its state!
++STR_CC_CONTACTS                                                 :{WHITE}Contacts
++STR_CC_CONTACTS_DESC                                            :{BLACK}If you need to reach {STRING}'s admins, try here!
+diff -r 29e0552d3ea4 src/nc_csettings.h
+--- a/src/nc_csettings.h	Sat Feb 28 20:12:34 2015 +0000
++++ b/src/nc_csettings.h	Fri Apr 03 09:57:22 2015 +0100
+@@ -92,6 +92,7 @@
+ 	
+ 	ServerList* server_list = NULL;
+ 	ServerGroupList servergroup_list = NULL;
++	uint order_selected = 0;
+ //	AdminList admin_list;
+ public:
+ 	char* display_name  = NULL;
+diff -r 29e0552d3ea4 src/nc_intro_gui.cpp
+=======
 +STR_NC_USER                                                     :{WHITE}Username:{NBSP}{NBSP}
 +STR_NC_PASSWORD                                                 :{WHITE}Password:{NBSP}{NBSP}
 +STR_NC_SET                                                      :{WHITE}Set...
 +STR_NC_REGULAR_USER                                             :{BLACK}Regular User Account:
 +STR_NC_ADMIN_USER                                               :{BLACK}Admin User Account:
 diff -r 8a569cf4a639 src/nc_intro_gui.cpp
+>>>>>>> other
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
+<<<<<<< local
++++ b/src/nc_intro_gui.cpp	Fri Apr 03 09:57:22 2015 +0100
+@@ -0,0 +1,309 @@
++#include "comc_intro_gui.h"
+=======
 +++ b/src/nc_intro_gui.cpp	Thu Apr 02 22:28:21 2015 +0100
 @@ -0,0 +1,372 @@
 +#include "nc_intro_gui.h"
 +#include "nc_csettings.h"
+>>>>>>> other
 +#include "strings_func.h"
 +#include "settings_type.h"
 +#include "table/strings.h"
@@ -673,6 +738,9 @@ diff -r 8a569cf4a639 src/nc_intro_gui.cpp
 +{
 +	AllocateWindowDescFront<LinksListGui>(&_links_list_desc, 0);
 +} 
+<<<<<<< local
+diff -r 29e0552d3ea4 src/nc_intro_gui.h
+=======
 +/*
 +	ADD COMMUNITY
 +*/
@@ -737,9 +805,15 @@ diff -r 8a569cf4a639 src/nc_intro_gui.cpp
 +	AllocateWindowDescFront<AddCommunityGui>(&_add_comm_desc, 0);
 +} 
 diff -r 8a569cf4a639 src/nc_intro_gui.h
+>>>>>>> other
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
+<<<<<<< local
++++ b/src/nc_intro_gui.h	Fri Apr 03 09:57:22 2015 +0100
+@@ -0,0 +1,8 @@
+=======
 +++ b/src/nc_intro_gui.h	Thu Apr 02 22:28:21 2015 +0100
 @@ -0,0 +1,9 @@
+>>>>>>> other
 +#ifndef COMC_INTRO_GUI_H
 +#define COMC_INTRO_GUI_H
 +#include "stdafx.h"
@@ -749,10 +823,17 @@ diff -r 8a569cf4a639 src/nc_intro_gui.h
 +void ShowAddCommunity(); 
 +
 +#endif
+<<<<<<< local
+diff -r 29e0552d3ea4 src/widgets/intro_widget.h
+--- a/src/widgets/intro_widget.h	Sat Feb 28 20:12:34 2015 +0000
++++ b/src/widgets/intro_widget.h	Fri Apr 03 09:57:22 2015 +0100
+@@ -33,6 +33,23 @@
+=======
 diff -r 8a569cf4a639 src/widgets/intro_widget.h
 --- a/src/widgets/intro_widget.h	Thu Apr 02 21:37:45 2015 +0100
 +++ b/src/widgets/intro_widget.h	Thu Apr 02 22:28:21 2015 +0100
 @@ -33,6 +33,25 @@
+>>>>>>> other
  	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
  	WID_SGI_AI_SETTINGS,           ///< AI button.
  	WID_SGI_EXIT,                  ///< Exit button.

@@ -1,0 +1,77 @@
+# HG changeset patch
+# Parent  23790d1dc67161661eb4781ba5ffc920a82a9f35
+
+diff -r 23790d1dc671 .hgtags
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/.hgtags	Fri Apr 03 15:22:16 2015 +0100
+@@ -0,0 +1,1 @@
++5dac82e6fed8c3522692ba2924c36e004ef6b11e 1.5.0
+diff -r 23790d1dc671 src/nc_intro_gui.cpp
+--- a/src/nc_intro_gui.cpp	Fri Apr 03 15:22:08 2015 +0100
++++ b/src/nc_intro_gui.cpp	Fri Apr 03 15:22:16 2015 +0100
+@@ -319,15 +319,13 @@
+ };
+ class AddCommunityGui : public Window
+ {
+-	QueryString name_editbox; ///< Message editbox.
+ 	QueryString link_editbox;    ///< Editbox.
+ 	public:
+-	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), name_editbox(50),link_editbox(200) 
++	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), link_editbox(200) 
+ 	{
+-		this->querystrings[WID_AC_NAME] = &this->name_editbox;
+ 		this->querystrings[WID_AC_LINK] = &this->link_editbox;
+ 		this->InitNested(window_number);
+-		this->SetFocusedWidget(WID_AC_NAME);
++		this->SetFocusedWidget(WID_AC_LINK);
+ 	}
+ 	virtual void DrawWidget(const Rect &r, int widget) const
+ 	{
+@@ -337,7 +335,7 @@
+ 		switch(widget)
+ 		{
+ 			case WID_AC_CONFIRM:
+-				CSettings::get().AddCommunity(name_editbox.GetText(),link_editbox.GetText());
++				CSettings::get().AddCommunity("Undefined",link_editbox.GetText());
+ 			break;
+ 		}
+ 	}
+@@ -352,8 +350,6 @@
+ 	EndContainer(),
+ 	NWidget(WWT_PANEL, COLOUR_WHITE),
+ 	NWidget(NWID_VERTICAL),SetPadding(7),
+-		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_COMMUNITY,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
+-		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_NAME), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
+ 		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_LINK,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
+ 		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_LINK), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
+ 		NWidget(WWT_TEXTBTN,COLOUR_ORANGE,WID_AC_CONFIRM),SetDataTip(STR_NC_CONFIRM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
+diff -r 23790d1dc671 src/rev.cpp.in
+--- a/src/rev.cpp.in	Fri Apr 03 15:22:08 2015 +0100
++++ b/src/rev.cpp.in	Fri Apr 03 15:22:16 2015 +0100
+@@ -39,7 +39,7 @@
+  * norev000 is for non-releases that are made on systems without
+  * subversion or sources that are not a checkout of subversion.
+  */
+-const char _openttd_revision[] = "!!VERSION!!";
++const char _openttd_revision[] = "1.5.0";
+ 
+ /**
+  * The text version of OpenTTD's build date.
+@@ -57,7 +57,7 @@
+  * (compiling from sources without any version control software)
+  * and 2 is for modified revision.
+  */
+-const byte _openttd_revision_modified = !!MODIFIED!!;
++const byte _openttd_revision_modified = 0;
+ 
+ /**
+  * The NewGRF revision of OTTD:
+@@ -72,7 +72,7 @@
+  * final release will always have a lower version number than the released
+  * version, thus making comparisons on specific revisions easy.
+  */
+-const uint32 _openttd_newgrf_version = 1 << 28 | 6 << 24 | 0 << 20 | 0 << 19 | (!!REVISION!! & ((1 << 19) - 1));
++const uint32 _openttd_newgrf_version = 1 << 28 | 5 << 24 | 0 << 20 | 1 << 19 | (27217 & ((1 << 19) - 1));
+ 
+ #ifdef __MORPHOS__
+ /**

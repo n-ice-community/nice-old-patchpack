@@ -1,30 +1,32 @@
 # HG changeset patch
 # Parent 31b2e39e4cc4dc8109a6a8ed19c207dad31eb84f
-# Parent  6e0ffe3d21618befbf600310c550efe7b30d8787
+# Parent  06f6b5dd055b9e2aa1ef0cabf15706ab40d87c1e
 
-diff -r 6e0ffe3d2161 source.list
---- a/source.list	Mon Mar 30 14:39:39 2015 +0100
-+++ b/source.list	Thu Apr 02 21:37:45 2015 +0100
-@@ -54,6 +54,7 @@
+diff -r 06f6b5dd055b source.list
+--- a/source.list	Fri Apr 03 12:23:11 2015 +0100
++++ b/source.list	Fri Apr 03 18:36:47 2015 +0100
+@@ -54,6 +54,8 @@
  misc.cpp
  mixer.cpp
  music.cpp
 +nc_csettings.cpp
++nc_util.cpp
  network/network.cpp
  network/network_admin.cpp
  network/network_client.cpp
-@@ -240,6 +241,8 @@
+@@ -240,6 +242,9 @@
  map_func.h
  map_type.h
  mixer.h
 +nc_csettings.h
 +nc_receiver.h
++nc_util.h
  network/network.h
  network/network_admin.h
  network/network_base.h
-diff -r 6e0ffe3d2161 src/fileio.cpp
---- a/src/fileio.cpp	Mon Mar 30 14:39:39 2015 +0100
-+++ b/src/fileio.cpp	Thu Apr 02 21:37:45 2015 +0100
+diff -r 06f6b5dd055b src/fileio.cpp
+--- a/src/fileio.cpp	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/fileio.cpp	Fri Apr 03 18:36:47 2015 +0100
 @@ -293,6 +293,7 @@
  	"game" PATHSEP,
  	"game" PATHSEP "library" PATHSEP,
@@ -53,9 +55,9 @@ diff -r 6e0ffe3d2161 src/fileio.cpp
  	};
  
  	for (uint i = 0; i < lengthof(default_subdirs); i++) {
-diff -r 6e0ffe3d2161 src/fileio_type.h
---- a/src/fileio_type.h	Mon Mar 30 14:39:39 2015 +0100
-+++ b/src/fileio_type.h	Thu Apr 02 21:37:45 2015 +0100
+diff -r 06f6b5dd055b src/fileio_type.h
+--- a/src/fileio_type.h	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/fileio_type.h	Fri Apr 03 18:36:47 2015 +0100
 @@ -33,6 +33,7 @@
  	GAME_DIR,      ///< Subdirectory for all game scripts
  	GAME_LIBRARY_DIR, ///< Subdirectory for all GS libraries
@@ -64,9 +66,9 @@ diff -r 6e0ffe3d2161 src/fileio_type.h
  	NUM_SUBDIRS,   ///< Number of subdirectories
  	NO_DIRECTORY,  ///< A path without any base directory
  };
-diff -r 6e0ffe3d2161 src/ini_load.cpp
---- a/src/ini_load.cpp	Mon Mar 30 14:39:39 2015 +0100
-+++ b/src/ini_load.cpp	Thu Apr 02 21:37:45 2015 +0100
+diff -r 06f6b5dd055b src/ini_load.cpp
+--- a/src/ini_load.cpp	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/ini_load.cpp	Fri Apr 03 18:36:47 2015 +0100
 @@ -323,3 +323,120 @@
  	fclose(in);
  }
@@ -188,9 +190,9 @@ diff -r 6e0ffe3d2161 src/ini_load.cpp
 +
 +	free(comment);
 +}
-diff -r 6e0ffe3d2161 src/ini_type.h
---- a/src/ini_type.h	Mon Mar 30 14:39:39 2015 +0100
-+++ b/src/ini_type.h	Thu Apr 02 21:37:45 2015 +0100
+diff -r 06f6b5dd055b src/ini_type.h
+--- a/src/ini_type.h	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/ini_type.h	Fri Apr 03 18:36:47 2015 +0100
 @@ -12,6 +12,7 @@
  #ifndef INI_TYPE_H
  #define INI_TYPE_H
@@ -207,9 +209,9 @@ diff -r 6e0ffe3d2161 src/ini_type.h
  
  	/**
  	 * Open the INI file.
-diff -r 6e0ffe3d2161 src/intro_gui.cpp
---- a/src/intro_gui.cpp	Mon Mar 30 14:39:39 2015 +0100
-+++ b/src/intro_gui.cpp	Thu Apr 02 21:37:45 2015 +0100
+diff -r 06f6b5dd055b src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/intro_gui.cpp	Fri Apr 03 18:36:47 2015 +0100
 @@ -9,6 +9,8 @@
  
  /** @file intro_gui.cpp The main menu GUI. */
@@ -219,17 +221,56 @@ diff -r 6e0ffe3d2161 src/intro_gui.cpp
  #include "stdafx.h"
  #include "error.h"
  #include "gui.h"
-diff -r 6e0ffe3d2161 src/nc_csettings.cpp
+diff -r 06f6b5dd055b src/lang/english.txt
+--- a/src/lang/english.txt	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/lang/english.txt	Fri Apr 03 18:36:47 2015 +0100
+@@ -5032,3 +5032,8 @@
+ 
+ # Town gui extended
+ STR_TOWN_VIEW_GROWTH                                            :{BLACK}GR: {ORANGE}{COMMA}{BLACK} next: {ORANGE}{COMMA} {BLACK} RH: {ORANGE}{COMMA} {BLACK}flag {ORANGE}{COMMA}  {BLACK}Fund: {ORANGE}{COMMA}{SILVER}m
++
++STR_NC_OTHER_TOKEN_LOGIN_ERROR                                  :{WHITE}Login failed, invalid token
++STR_NC_ADMIN_LOGIN                                              :{BLACK}Admin Login
++STR_NC_ADMIN_LOGOUT                                             :{BLACK}Admin Logout
++STR_NC_CLIENTLIST_GET_TOKEN                                     :{LTBLUE}Token Login
+diff -r 06f6b5dd055b src/nc_csettings.cpp
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_csettings.cpp	Thu Apr 02 21:37:45 2015 +0100
-@@ -0,0 +1,619 @@
++++ b/src/nc_csettings.cpp	Fri Apr 03 18:36:47 2015 +0100
+@@ -0,0 +1,688 @@
 +#include "nc_csettings.h"
 +#include "network/network_content.h"
 +#include "fileio_func.h"
++#include "nc_util.h"
 +#include "safeguards.h"
 +
++#if defined(WIN32) || defined(WIN64)
++//http://stackoverflow.com/questions/8512958/is-there-a-windows-variant-of-strsep
++char* strsep(char** stringp, const char* delim)
++{
++	char* start = *stringp;
++	char* p;
++
++	p = (start != NULL) ? strpbrk(start, delim) : NULL;
++
++	if (p == NULL)
++	{
++		*stringp = NULL;
++	}
++	else
++	{
++		*p = '\0';
++		*stringp = p + 1;
++	}
++
++	return start;
++}
++#endif
 +Server::Server() : display_name(NULL), ipv4(NULL), ipv6(NULL), port(0), uid(0)
 +{
++}
++NetworkAddress Server::GetAddress()
++{
++	return NetworkAddress(ipv4,port);
 +}
 +
 +char* _community_dir;
@@ -239,7 +280,10 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +	static CSettings instance;
 +	return instance;
 +}
-+
++const char* CSettings::GetSelectedName()
++{
++	return selected == -1 ? "None" : community_list[selected]->display_name;
++}
 +CSettings::CSettings()
 +{
 +	community_file = str_fmt("%scommunities.cfg", _community_dir);
@@ -289,9 +333,10 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +	IniFile *ini = new IniFile();
 +	ini->LoadFromDisk(community_file, BASE_DIR);
 +
-+	for(uint i = 0; i < community_list.Length() ; i++)
++	for(int i = 0; i < community_list.Length() ; i++)
 +	{
-+		community_list[i]->Save(ini,this->selected == i);
++		if(strcmp(community_list[i]->group_name , "Undefined") != 0)
++			community_list[i]->Save(ini,this->selected == i);
 +	}
 +	ini->SaveToDisk(community_file);
 +	RegistUpdate();
@@ -313,7 +358,7 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +Community *CSettings::GetSelected()
 +{
 +	CheckIntegrity();
-+	return community_list.Length() == 0 ? NULL : community_list[selected];
++	return community_list.Length() == 0 || selected == -1 ? NULL : community_list[selected];
 +}
 +uint CSettings::Selected()
 +{
@@ -324,6 +369,20 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +	this->selected = i <= (community_list.Length()-1) ? i : (community_list.Length()-1);
 +	this->SaveCommunities();
 +}
++void CSettings::SetSelectedByIP(char* ip)
++{
++	for(uint i = 0; i < community_list.Length() ; i++)
++	{
++		if(community_list[i]->ContainsIp(ip))
++		{
++			this->selected = i;
++			this->SaveCommunities();
++			return;
++		}
++	}
++	this->selected = -1;
++	return;
++}
 +char *CSettings::GetCommunityName(int i)
 +{
 +	return community_list[i]->display_name;
@@ -331,6 +390,16 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +Community::Community(CSettings* s) : _instance(NULL), linklist_url(NULL), serverlist_url(NULL),servergrouplist_url(NULL),adminlist_url(NULL),modified(0),out_of_sync(false),server_list(NULL),servergroup_list(NULL),display_name(NULL),group_name(NULL),username(NULL),password(NULL),admin(NULL),adminpass(NULL)
 +{
 +	this->_instance = s;
++}
++
++bool Community::ContainsIp(char* ip)
++{
++	if(server_list == NULL)
++		return false;
++	for(int i = 0; i < server_list->Size(); i++)
++		if(strcmp(server_list->Get(i)->ipv4,ip)==0)
++			return true;
++	return false;
 +}
 +void Community::CheckIntegrity()
 +{
@@ -416,6 +485,9 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +	this->password = (item = group->GetItem("password",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +	this->admin = (item = group->GetItem("admin",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +	this->adminpass = (item = group->GetItem("adminpass",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	this->login_url = (item = group->GetItem("login_url",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	this->login_method = (item = group->GetItem("login_method",false)) == NULL || item->value == NULL ? TOKEN : static_cast<enum LoginMethod>(atoi(item->value));
++	this->login_command = (item = group->GetItem("login_command",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +
 +	return result;
 +}
@@ -432,10 +504,14 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +	if(this->password != NULL) group->GetItem("password",true)->SetValue(this->password);
 +	if(this->admin != NULL) group->GetItem("admin",true)->SetValue(this->admin);
 +	if(this->adminpass != NULL) group->GetItem("adminpass",true)->SetValue(this->adminpass);
++	if(this->login_url != NULL) group->GetItem("login_url",true)->SetValue(this->login_url);
++	if(this->login_command != NULL) group->GetItem("login_command",true)->SetValue(this->login_command);
 +
 +	char temp[32];
 +	seprintf(temp, lastof(temp),"%ld",this->modified);
 +	group->GetItem("modified",true)->SetValue(temp);
++	seprintf(temp, lastof(temp),"%i",(int)this->login_method);
++	group->GetItem("login_method",true)->SetValue(temp);
 +	group->GetItem("selected",true)->SetValue( selected ? "true": "false");
 +}
 +
@@ -450,6 +526,11 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +void Community::SetGroup(int i)
 +{
 +	this->servergroup_list->SetSelected(i);
++}
++
++void Community::AttemptLogin()
++{
++	new Login();
 +}
 +ServerList* Community::GetServerList() 
 +{
@@ -827,14 +908,16 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +{
 +	return data.Length();
 +}
-+
++ServerGroup::ServerGroup() : selected(false)
++{
++}
 +uint ServerGroup::getServerUid(uint g, uint s)
 +{
 +	int t = 0;
 +	for(uint i = 0; i < g; i++)
 +		t += this->servers_within_group[i];
 +	return this->server_uid[t+s];
-+}
++	}
 +uint ServerGroup::getServer(uint g, uint s)
 +{
 +	int t = 0;
@@ -842,10 +925,10 @@ diff -r 6e0ffe3d2161 src/nc_csettings.cpp
 +		t += this->servers_within_group[i];
 +	return t+s;
 +}
-diff -r 6e0ffe3d2161 src/nc_csettings.h
+diff -r 06f6b5dd055b src/nc_csettings.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_csettings.h	Thu Apr 02 21:37:45 2015 +0100
-@@ -0,0 +1,165 @@
++++ b/src/nc_csettings.h	Fri Apr 03 18:36:47 2015 +0100
+@@ -0,0 +1,183 @@
 +#ifndef NC_CSETTINGS_H
 +#define NC_CSETTINGS_H
 +
@@ -853,6 +936,8 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +#include "stdafx.h"
 +#include "gfx_type.h"
 +#include "ini_type.h"
++#include "network/network.h"
++#include "network/network_func.h"
 +#include "misc/fixedsizearray.hpp"
 +#include <string>
 +#include <ctime>
@@ -860,6 +945,7 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +struct Server
 +{
 +	Server();
++	NetworkAddress GetAddress();
 +	char* display_name;
 +	char* ipv4 ;
 +	char* ipv6 ;
@@ -905,9 +991,10 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	FixedSizeArray<uint,5> servers_within_group;
 +	FixedSizeArray<uint,50> server_uid;
 +	FixedSizeArray<Colours,50> server_colour;
-+	bool selected = false;
++	bool selected ;
 +	uint getServerUid(uint, uint);
 +	uint getServer(uint, uint);
++	ServerGroup();
 +};
 +class ServerGroupList : public Receiver
 +{
@@ -915,8 +1002,8 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	const char *link ;
 +	const char *file ;
 +	FixedSizeArray<ServerGroup*,10> data;
-+	time_t modified = 0;
-+	bool out_of_sync = false;
++	time_t modified;
++	bool out_of_sync;
 +	int selected ;
 +public:
 +	ServerGroup *Get(uint i);
@@ -936,6 +1023,12 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	ServerGroupList(char *,char*);
 +};
 +
++enum LoginMethod
++{
++	TOKEN,
++	TOKEN_MD5,
++	PRV_TO_SRV,
++};
 +class CSettings;
 +
 +class Community : public Receiver
@@ -959,11 +1052,17 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	char* password;
 +	char* admin;
 +	char* adminpass;
++	char* login_url;
++	char* login_command;
++	enum LoginMethod login_method;
 +	ServerList* GetServerList();
 +	ServerGroup* GetServerGroup();
 +	ServerGroupList* GetGroups();
 +	void SetGroup(int);
 +	void CheckIntegrity();
++	bool ContainsIp(char*);
++	
++	void AttemptLogin();
 +	//
 +	Community(CSettings*);
 +	bool Load(IniGroup*,bool);
@@ -986,7 +1085,7 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	void (*thereWasAnUpdate)(void);
 +	char *community_file;
 +	FixedSizeArray<Community*,10> community_list ;
-+	uint selected;
++	int selected;
 +	
 +	CSettings();
 +	CSettings(CSettings const&);
@@ -1000,6 +1099,8 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	int Size();
 +	Community *GetSelected();
 +	void SetSelected(uint i);
++	const char* GetSelectedName();
++	void SetSelectedByIP(char*);
 +	char *GetCommunityName(int);
 +	uint Selected(); 
 +	
@@ -1011,9 +1112,9 @@ diff -r 6e0ffe3d2161 src/nc_csettings.h
 +	void RegistUpdate();
 +};
 +#endif
-diff -r 6e0ffe3d2161 src/nc_receiver.h
---- a/src/nc_receiver.h	Mon Mar 30 14:39:39 2015 +0100
-+++ b/src/nc_receiver.h	Thu Apr 02 21:37:45 2015 +0100
+diff -r 06f6b5dd055b src/nc_receiver.h
+--- a/src/nc_receiver.h	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/nc_receiver.h	Fri Apr 03 18:36:47 2015 +0100
 @@ -1,3 +1,6 @@
 +#ifndef NC_RECEIVER_H
 +#define NC_RECEIVER_H
@@ -1027,3 +1128,101 @@ diff -r 6e0ffe3d2161 src/nc_receiver.h
  };
 +
 +#endif
+diff -r 06f6b5dd055b src/network/network.cpp
+--- a/src/network/network.cpp	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/network/network.cpp	Fri Apr 03 18:36:47 2015 +0100
+@@ -37,6 +37,7 @@
+ #include "../core/pool_func.hpp"
+ #include "../gfx_func.h"
+ #include "../error.h"
++#include "../nc_csettings.h"
+ 
+ #include "../safeguards.h"
+ 
+@@ -690,6 +691,9 @@
+ 	_network_join_server_password = join_server_password;
+ 	_network_join_company_password = join_company_password;
+ 
++	//where did we join? - IP check
++	IConsolePrintF(CC_WHITE, "ip   %s", _settings_client.network.last_host);	
++	CSettings::get().SetSelectedByIP(_settings_client.network.last_host);
+ 	NetworkDisconnect();
+ 	NetworkInitialize();
+ 
+diff -r 06f6b5dd055b src/network/network_gui.cpp
+--- a/src/network/network_gui.cpp	Fri Apr 03 12:23:11 2015 +0100
++++ b/src/network/network_gui.cpp	Fri Apr 03 18:36:47 2015 +0100
+@@ -38,7 +38,7 @@
+ #include "../table/sprites.h"
+ 
+ #include "../stringfilter_type.h"
+-
++#include "../nc_csettings.h"
+ #include "../safeguards.h"
+ 
+ 
+@@ -1691,6 +1691,46 @@
+ 	NetworkServerKickOrBanIP(ci->client_id, true);
+ }
+ 
++static void ClientList_Get_Token(const NetworkClientInfo *ci)
++{
++	Community* selected = CSettings::get().GetSelected();
++	if(selected != NULL)
++		selected->AttemptLogin();
++}
++
++static void ClientList_Admin_Login(const NetworkClientInfo *ci)
++{
++	Community* selected = CSettings::get().GetSelected();
++	if(selected != NULL)
++	{
++		
++        std::string login_cmd = "!alogin " + std::string(selected->admin) + " " + std::string(selected->adminpass);
++        NetworkClientSendChat(NETWORK_ACTION_CHAT_CLIENT, DESTTYPE_CLIENT, CLIENT_ID_SERVER, login_cmd.c_str());
++    }
++}
++
++static void ClientList_Admin_Logout(const NetworkClientInfo *ci)
++{
++	if (CSettings::get().GetSelected() != NULL) {
++        NetworkClientSendChat(NETWORK_ACTION_CHAT_CLIENT, DESTTYPE_CLIENT, CLIENT_ID_SERVER, "!alogout");
++    }
++}
++/*static void ClientListInviteYesCallback(Window *w, bool confirmed)
++{
++	if (confirmed) {
++		const NetworkClientInfo *ci = NetworkClientInfo::GetByClientID(invitedid);
++		char msg[128];
++		seprintf(msg,lastof(msg), "!invite %s", ci->client_name);
++		NetworkClientSendChat(NETWORK_ACTION_CHAT, DESTTYPE_BROADCAST, 0 , msg);
++	}
++}*/
++
++/*static void ClientList_Invite(const NetworkClientInfo *ci)
++{
++	invitedid = ci->client_id;
++	SetDParamStr(0, ci->client_name);
++	ShowQuery(STR_NETWORK_CLIENTLIST_INVITE_CAPTION, STR_NETWORK_CLIENTLIST_INVITE_QUESTION, NULL, ClientListInviteYesCallback);
++}*/
+ static void ClientList_GiveMoney(const NetworkClientInfo *ci)
+ {
+ 	ShowNetworkGiveMoneyWindow(ci->client_playas);
+@@ -1766,7 +1806,16 @@
+ 			this->AddAction(STR_NETWORK_CLIENTLIST_KICK, &ClientList_Kick);
+ 			this->AddAction(STR_NETWORK_CLIENTLIST_BAN, &ClientList_Ban);
+ 		}
+-
++		if ( CSettings::get().GetSelected() != NULL && _network_own_client_id == ci->client_id) {
++			this->AddAction(STR_NC_CLIENTLIST_GET_TOKEN, &ClientList_Get_Token);
++			this->AddAction(STR_NC_ADMIN_LOGIN, &ClientList_Admin_Login);
++			this->AddAction(STR_NC_ADMIN_LOGOUT, &ClientList_Admin_Logout);
++		}
++		/*if ( CSettings::get().GetSelected() != NULL&& _network_own_client_id != ci->client_id
++			&& ci->client_id != CLIENT_ID_SERVER && Company::IsValidID(_local_company))
++		{
++			this->AddAction(STR_NETWORK_CLIENTLIST_INVITE, &ClientList_Invite);
++		}*/
+ 		this->InitNested(client_id);
+ 		CLRBITS(this->flags, WF_WHITE_BORDER);
+ 	}
