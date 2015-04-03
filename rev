@@ -1,15 +1,15 @@
 # HG changeset patch
-# Parent  23790d1dc67161661eb4781ba5ffc920a82a9f35
+# Parent  af99ef9cf1a515c334a62a53035c8b2a004c95cc
 
-diff -r 23790d1dc671 .hgtags
+diff -r af99ef9cf1a5 .hgtags
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/.hgtags	Fri Apr 03 15:22:16 2015 +0100
++++ b/.hgtags	Fri Apr 03 22:33:28 2015 +0100
 @@ -0,0 +1,1 @@
 +5dac82e6fed8c3522692ba2924c36e004ef6b11e 1.5.0
-diff -r 23790d1dc671 src/nc_intro_gui.cpp
---- a/src/nc_intro_gui.cpp	Fri Apr 03 15:22:08 2015 +0100
-+++ b/src/nc_intro_gui.cpp	Fri Apr 03 15:22:16 2015 +0100
-@@ -319,15 +319,13 @@
+diff -r af99ef9cf1a5 src/nc_intro_gui.cpp
+--- a/src/nc_intro_gui.cpp	Fri Apr 03 22:33:21 2015 +0100
++++ b/src/nc_intro_gui.cpp	Fri Apr 03 22:33:28 2015 +0100
+@@ -334,15 +334,13 @@
  };
  class AddCommunityGui : public Window
  {
@@ -27,7 +27,7 @@ diff -r 23790d1dc671 src/nc_intro_gui.cpp
  	}
  	virtual void DrawWidget(const Rect &r, int widget) const
  	{
-@@ -337,7 +335,7 @@
+@@ -352,7 +350,7 @@
  		switch(widget)
  		{
  			case WID_AC_CONFIRM:
@@ -36,7 +36,7 @@ diff -r 23790d1dc671 src/nc_intro_gui.cpp
  			break;
  		}
  	}
-@@ -352,8 +350,6 @@
+@@ -367,8 +365,6 @@
  	EndContainer(),
  	NWidget(WWT_PANEL, COLOUR_WHITE),
  	NWidget(NWID_VERTICAL),SetPadding(7),
@@ -45,9 +45,9 @@ diff -r 23790d1dc671 src/nc_intro_gui.cpp
  		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_LINK,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
  		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_LINK), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
  		NWidget(WWT_TEXTBTN,COLOUR_ORANGE,WID_AC_CONFIRM),SetDataTip(STR_NC_CONFIRM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
-diff -r 23790d1dc671 src/rev.cpp.in
---- a/src/rev.cpp.in	Fri Apr 03 15:22:08 2015 +0100
-+++ b/src/rev.cpp.in	Fri Apr 03 15:22:16 2015 +0100
+diff -r af99ef9cf1a5 src/rev.cpp.in
+--- a/src/rev.cpp.in	Fri Apr 03 22:33:21 2015 +0100
++++ b/src/rev.cpp.in	Fri Apr 03 22:33:28 2015 +0100
 @@ -39,7 +39,7 @@
   * norev000 is for non-releases that are made on systems without
   * subversion or sources that are not a checkout of subversion.

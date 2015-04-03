@@ -1,4 +1,5 @@
 # HG changeset patch
+# Parent  eb61cc4d48b4c9b435b84536abd2c6095e42b210
 <<<<<<< local
 # Parent  29e0552d3ea4b59e6d29df6495487ca4768a61f1
 =======
@@ -6,35 +7,30 @@
 >>>>>>> other
 
 <<<<<<< local
-diff -r 29e0552d3ea4 src/intro_gui.cpp
---- a/src/intro_gui.cpp	Sat Feb 28 20:12:34 2015 +0000
-+++ b/src/intro_gui.cpp	Fri Apr 03 09:57:22 2015 +0100
-@@ -31,14 +31,51 @@
-=======
-diff -r 8a569cf4a639 source.list
---- a/source.list	Thu Apr 02 21:37:45 2015 +0100
-+++ b/source.list	Thu Apr 02 22:28:21 2015 +0100
-@@ -55,6 +55,7 @@
- mixer.cpp
+
+diff -r eb61cc4d48b4 source.list
+--- a/source.list	Fri Apr 03 23:20:13 2015 +0100
++++ b/source.list	Fri Apr 03 23:31:21 2015 +0100
+@@ -56,6 +56,7 @@
  music.cpp
+ nc_community_window.cpp
  nc_csettings.cpp
 +nc_intro_gui.cpp
+ nc_util.cpp
  network/network.cpp
  network/network_admin.cpp
- network/network_client.cpp
-@@ -243,6 +244,7 @@
+@@ -245,6 +246,7 @@
  mixer.h
+ nc_community_window.h
  nc_csettings.h
- nc_receiver.h
 +nc_intro_gui.h
+ nc_receiver.h
+ nc_util.h
  network/network.h
- network/network_admin.h
- network/network_base.h
-diff -r 8a569cf4a639 src/intro_gui.cpp
---- a/src/intro_gui.cpp	Thu Apr 02 21:37:45 2015 +0100
-+++ b/src/intro_gui.cpp	Thu Apr 02 22:28:21 2015 +0100
-@@ -31,14 +31,60 @@
->>>>>>> other
+diff -r eb61cc4d48b4 src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Fri Apr 03 23:20:13 2015 +0100
++++ b/src/intro_gui.cpp	Fri Apr 03 23:31:21 2015 +0100
+@@ -31,14 +31,71 @@
  #include "highscore.h"
  
  #include "widgets/intro_widget.h"
@@ -69,18 +65,29 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +		{
 +			case WID_NC_COMMUNITY_DROPDOWN:
 +				list = new DropDownList();
-+				*selected_index = CSettings::get().Selected();
++				*selected_index = CSettings::get().Selected() + 1;
++				*list->Append() = new DropDownListCharStringItem("None", 0, false);
 +				for (int i = 0; i < CSettings::get().Size(); i++) {
-+					*list->Append() = new DropDownListCharStringItem(CSettings::get().GetCommunityName(i), i, false);
++					*list->Append() = new DropDownListCharStringItem(CSettings::get().GetCommunityName(i), i+1, false);
 +				}
 +			break;
 +			case WID_NC_GROUP_DROPDOWN:
 +			{
 +				list = new DropDownList();
-+				ServerGroupList* groups = CSettings::get().GetSelected()->GetGroups();
-+				*selected_index = groups->SelectedIndex() +1 ;
 +				*list->Append() = new DropDownListCharStringItem("None", 0, false);
-+				for (uint i = 0; i < groups->Size(); i++) {
++				if(CSettings::get().GetSelected() == NULL)
++				{
++					*selected_index = 0;
++					return list;
++				}
++				ServerGroupList* groups = CSettings::get().GetSelected()->GetGroups();
++				if(groups == NULL)
++				{
++					*selected_index = 0;
++					return list;
++				}
++				*selected_index = groups->SelectedIndex() +1 ;
++				for (uint i = 0;i < groups->Size(); i++) {
 +					*list->Append() = new DropDownListCharStringItem(groups->Get(i)->display_name, i+1, false);
 +				}
 +			}
@@ -95,7 +102,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  	SelectGameWindow(WindowDesc *desc) : Window(desc)
  	{
  		this->CreateNestedTree();
-@@ -64,6 +110,13 @@
+@@ -64,6 +121,13 @@
  	{
  		bool missing = _current_language->missing >= _settings_client.gui.missing_strings_threshold && !IsReleasedVersion();
  		this->GetWidget<NWidgetStacked>(WID_SGI_TRANSLATION_SELECTION)->SetDisplayedPlane(missing ? 0 : SZSP_NONE);
@@ -109,7 +116,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  	}
  
  	virtual void DrawWidget(const Rect &r, int widget) const
-@@ -73,9 +126,46 @@
+@@ -73,9 +137,46 @@
  				SetDParam(0, _current_language->missing);
  				DrawStringMultiLine(r.left, r.right, r.top,  r.bottom, STR_INTRO_TRANSLATION, TC_FROMSTRING, SA_CENTER);
  				break;
@@ -145,10 +152,10 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +				SetDParamStr(0, selected == NULL ? "" : CSettings::get().GetSelected()->display_name);
 +			break;
 +			case WID_NC_COMMUNITY_DROPDOWN:   
-+				SetDParamStr(0, selected == NULL ? "" :CSettings::get().GetSelected()->display_name); 
++				SetDParamStr(0, selected == NULL ? "None" :CSettings::get().GetSelectedName()); 
 +			break;
 +			case WID_NC_GROUP_DROPDOWN:
-+				SetDParamStr(0, selected == NULL || selected->GetGroups() == NULL ? "" :selected->GetGroups()->SelectedName());
++				SetDParamStr(0, selected == NULL || selected->GetGroups() == NULL ? "None" :selected->GetGroups()->SelectedName());
 +			break;
 +			default:
 +			break;
@@ -157,7 +164,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
  	{
  		switch (widget) {
-@@ -95,7 +185,21 @@
+@@ -95,7 +196,21 @@
  			}
  		}
  	}
@@ -166,7 +173,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +	{
 +		switch (widget) {
 +			case WID_NC_COMMUNITY_DROPDOWN:
-+				CSettings::get().SetSelected(index);
++				CSettings::get().SetSelected(index-1);
 +				DeleteWindowByClass(WC_SELECT_GAME);
 +				ShowSelectGameWindow();	
 +			break;
@@ -180,7 +187,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  	virtual void OnClick(Point pt, int widget, int click_count)
  	{
  #ifdef ENABLE_NETWORK
-@@ -103,7 +207,7 @@
+@@ -103,7 +218,7 @@
  		 * creation/load windows for the network server. */
  		if (IsInsideMM(widget, WID_SGI_GENERATE_GAME, WID_SGI_EDIT_SCENARIO + 1)) _is_network_server = false;
  #endif /* ENABLE_NETWORK */
@@ -189,7 +196,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  		switch (widget) {
  			case WID_SGI_GENERATE_GAME:
  				if (_ctrl_pressed) {
-@@ -144,10 +248,148 @@
+@@ -144,10 +259,154 @@
  				break;
  			case WID_SGI_AI_SETTINGS:     ShowAIConfigWindow(); break;
  			case WID_SGI_EXIT:            HandleExitGameRequest(); break;
@@ -205,18 +212,18 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +			break;
 +			default:
 +				Community* selected = CSettings::get().GetSelected();
-+				if(selected == NULL) break;
-+				ServerList* list = selected->GetServerList();
-+				if(widget >= WID_NC_LIST && widget <= WID_NC_LIST_END && list != NULL)
++				if(selected == NULL && CSettings::get().Size() == 0) break;
++				if(widget >= WID_NC_LIST && widget <= WID_NC_LIST_END )
 +				{
++					ServerList* list = selected->GetServerList();
 +					if(list == NULL) break;
 +					printf("Clicked\n");
 +					printf("%s\n", list->Get(widget - WID_NC_LIST)->ipv4);
 +					if (_ctrl_pressed) {
-+						NetworkClientConnectGame(list->Get(widget - WID_NC_LIST)->ipv4, COMPANY_NEW_COMPANY);
++						NetworkClientConnectGame(list->Get(widget - WID_NC_LIST)->GetAddress(), COMPANY_NEW_COMPANY);
 +					}
 +					else{
-+						NetworkClientConnectGame(list->Get(widget - WID_NC_LIST)->ipv4, COMPANY_SPECTATOR);
++						NetworkClientConnectGame(list->Get(widget - WID_NC_LIST)->GetAddress(), COMPANY_SPECTATOR);
 +					}
 +				}else if(widget == WID_NC_COMMUNITY_DROPDOWN || widget == WID_NC_GROUP_DROPDOWN)
 +				{
@@ -236,7 +243,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +	ServerList* list = NULL;
 +	ServerGroup* group = NULL;
 +	NWidgetVertical *main = new NWidgetVertical;
-+	if(selected == NULL) // There is no communities
++	if(selected == NULL && CSettings::get().Size() == 0) // There is no communities
 +	{
 +		NWidgetLeaf* cap = new NWidgetLeaf(WWT_CAPTION, COLOUR_BROWN, WID_NC_HEADER,0x0,STR_NULL);cap->SetDataTip(STR_NC_NO_COMMUNITY,STR_NULL);
 +		cap->SetFill(1,0);
@@ -250,9 +257,6 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +		return main;
 +	}
  
-+	list = selected->GetServerList();
-+	group = selected->GetServerGroup();
-+
 +	NWidgetLeaf* cap = new NWidgetLeaf(WWT_CAPTION, COLOUR_BROWN, WID_NC_HEADER,0x0,STR_NULL);cap->SetDataTip(STR_NC_COMMUNITY_SECTION,STR_NULL);
 +	cap->SetFill(1,0);
 +	main->Add(cap);
@@ -267,6 +271,15 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
 +	addc_btn->SetDataTip(STR_NC_ADD_COMM,STR_NULL);addc_btn->SetMinimalSize(0,15);
 +	hor->Add(drop);hor->Add(addc_btn);
 +	ver->Add(hor);
++	
++	if(selected == NULL)
++	{
++		*biggest_index = (WID_NC_LINKS);
++		return main;
++	}
++	
++	list = selected->GetServerList();
++	group = selected->GetServerGroup();
 +	NWidgetLeaf* drop_mode = new NWidgetLeaf(WWT_DROPDOWN, COLOUR_WHITE, WID_NC_GROUP_DROPDOWN, 0x0, STR_NULL);
 +	drop_mode->SetDataTip(STR_BLACK_RAW_STRING,STR_NULL);drop_mode->SetFill(1,0);drop_mode->SetPadding(4,4,4,4);
 +	ver->Add(drop_mode);
@@ -338,7 +351,7 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  static const NWidgetPart _nested_select_game_widgets[] = {
  	NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_INTRO_CAPTION, STR_NULL),
  	NWidget(WWT_PANEL, COLOUR_BROWN),
-@@ -248,6 +490,7 @@
+@@ -248,6 +507,7 @@
  	NWidget(NWID_SPACER), SetMinimalSize(0, 8),
  
  	EndContainer(),
@@ -346,21 +359,13 @@ diff -r 8a569cf4a639 src/intro_gui.cpp
  };
  
  static WindowDesc _select_game_desc(
-<<<<<<< local
-diff -r 29e0552d3ea4 src/lang/english.txt
---- a/src/lang/english.txt	Sat Feb 28 20:12:34 2015 +0000
-+++ b/src/lang/english.txt	Fri Apr 03 09:57:22 2015 +0100
-@@ -5029,3 +5029,36 @@
-=======
-diff -r 8a569cf4a639 src/lang/english.txt
---- a/src/lang/english.txt	Thu Apr 02 21:37:45 2015 +0100
-+++ b/src/lang/english.txt	Thu Apr 02 22:28:21 2015 +0100
-@@ -5032,3 +5032,21 @@
->>>>>>> other
+diff -r eb61cc4d48b4 src/lang/english.txt
+--- a/src/lang/english.txt	Fri Apr 03 23:20:13 2015 +0100
++++ b/src/lang/english.txt	Fri Apr 03 23:31:21 2015 +0100
+@@ -5033,6 +5033,23 @@
  
  # Town gui extended
  STR_TOWN_VIEW_GROWTH                                            :{BLACK}GR: {ORANGE}{COMMA}{BLACK} next: {ORANGE}{COMMA} {BLACK} RH: {ORANGE}{COMMA} {BLACK}flag {ORANGE}{COMMA}  {BLACK}Fund: {ORANGE}{COMMA}{SILVER}m
-+
 +# intro gui
 +STR_NC_INTRO_ACCOUNT_DETAILS                                    :{BLACK}Account details
 +STR_NC_INTRO_LINKS                                              :{BLACK}Useful links
@@ -373,64 +378,20 @@ diff -r 8a569cf4a639 src/lang/english.txt
 +STR_NC_ACCOUNT_DETAILS_CAPTION                                  :{BLACK}{RAW_STRING}'s Account Details
 +STR_NC_LINKS_CAPTION                                            :{BLACK}{RAW_STRING}'s Useful Links
 +
-<<<<<<< local
-+STR_CC_USER                                                     :{WHITE}Username:{NBSP}{NBSP}
-+STR_CC_PASSWORD                                                 :{WHITE}Password:{NBSP}{NBSP}
-+STR_CC_SET                                                      :{WHITE}Set...
-+STR_CC_REGULAR_USER                                             :{BLACK}Regular User Account:
-+STR_CC_ADMIN_USER                                               :{BLACK}Admin User Account:
-+STR_CC_USER_DIALOG                                              :{BLACK}Your Username:
-+STR_CC_AUSER_DIALOG                                             :{BLACK}Your Admin Username:
-+STR_CC_PASSWORD_DIALOG                                          :{BLACK}Your Password:
-+STR_CC_APASSWORD_DIALOG                                         :{BLACK}Your Admin Password:
-+STR_CC_PASSWORD_SET                                             :saved
-+STR_CC_PASSWORD_EMPTY                                           :EMPTY
-+STR_CC_CURRENT_NICK                                             :{WHITE}{RAW_STRING}
-+STR_CC_BLACK_RAW                                                :{BLACK}{RAW_STRING}
-+STR_CC_BLACK_STRING                                             :{BLACK}{STRING}
-+STR_CC_WEBSITE                                                  :{WHITE}{STRING}'s Main Website
-+STR_CC_WEBSITE_DESC                                             :{BLACK}Here you can find the latest news about the community.
-+STR_CC_FORUM                                                    :{WHITE}{STRING}'s Forum
-+STR_CC_FORUM_DESC                                               :{BLACK}Here you can interact with the others users, discuss the game and give us feedback!
-+STR_CC_WIKI                                                     :{WHITE}{STRING}'s Wiki
-+STR_CC_WIKI_DESC                                                :{BLACK}Here you can find, errr, things?
-+STR_CC_RULES                                                    :{WHITE}Rules
-+STR_CC_RULES_DESC                                               :{BLACK}{STRING}'s servers rules.
-+STR_CC_SERVERS                                                  :{WHITE}{STRING}'s Servers List
-+STR_CC_SERVERS_DESC                                             :{BLACK}Here you can find the server list and its state!
-+STR_CC_CONTACTS                                                 :{WHITE}Contacts
-+STR_CC_CONTACTS_DESC                                            :{BLACK}If you need to reach {STRING}'s admins, try here!
-diff -r 29e0552d3ea4 src/nc_csettings.h
---- a/src/nc_csettings.h	Sat Feb 28 20:12:34 2015 +0000
-+++ b/src/nc_csettings.h	Fri Apr 03 09:57:22 2015 +0100
-@@ -92,6 +92,7 @@
- 	
- 	ServerList* server_list = NULL;
- 	ServerGroupList servergroup_list = NULL;
-+	uint order_selected = 0;
- //	AdminList admin_list;
- public:
- 	char* display_name  = NULL;
-diff -r 29e0552d3ea4 src/nc_intro_gui.cpp
-=======
 +STR_NC_USER                                                     :{WHITE}Username:{NBSP}{NBSP}
 +STR_NC_PASSWORD                                                 :{WHITE}Password:{NBSP}{NBSP}
 +STR_NC_SET                                                      :{WHITE}Set...
 +STR_NC_REGULAR_USER                                             :{BLACK}Regular User Account:
 +STR_NC_ADMIN_USER                                               :{BLACK}Admin User Account:
-diff -r 8a569cf4a639 src/nc_intro_gui.cpp
->>>>>>> other
+ STR_NC_NO_USER_OR_PASS                                          :{WHITE}Username or password not defined...
+ STR_NC_OTHER_TOKEN_LOGIN_ERROR                                  :{WHITE}Login failed, invalid token
+ STR_NC_ADMIN_LOGIN                                              :{BLACK}Admin Login
+diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-<<<<<<< local
-+++ b/src/nc_intro_gui.cpp	Fri Apr 03 09:57:22 2015 +0100
-@@ -0,0 +1,309 @@
-+#include "comc_intro_gui.h"
-=======
-+++ b/src/nc_intro_gui.cpp	Thu Apr 02 22:28:21 2015 +0100
-@@ -0,0 +1,372 @@
++++ b/src/nc_intro_gui.cpp	Fri Apr 03 23:31:21 2015 +0100
+@@ -0,0 +1,387 @@
 +#include "nc_intro_gui.h"
 +#include "nc_csettings.h"
->>>>>>> other
 +#include "strings_func.h"
 +#include "settings_type.h"
 +#include "table/strings.h"
@@ -439,6 +400,7 @@ diff -r 8a569cf4a639 src/nc_intro_gui.cpp
 +#include "settings_func.h" //saveconfig
 +#include "textbuf_gui.h"
 +#include "stdafx.h"
++#include "3rdparty/md5/md5.h"
 +
 +#include "network/network.h"
 +#include "network/network_func.h"
@@ -530,7 +492,21 @@ diff -r 8a569cf4a639 src/nc_intro_gui.cpp
 +					return;
 +				}
 +				selected->username = stredup(name_editbox.GetText(),NULL);
-+				selected->password = stredup(pass_editbox.GetText(),NULL);
++				if(selected->login_method == TOKEN_MD5)
++				{
++					Md5 password;
++					password.Append(pass_editbox.GetText(), strlen(pass_editbox.GetText()));
++					uint8 digest[16];
++					char hex_output[16 * 2 + 1];
++					password.Finish(digest);
++					for (int di = 0; di < 16; ++di) 
++					{
++						seprintf(hex_output + di * 2, lastof(hex_output), "%02x", digest[di]);
++					};
++					selected->password = stredup(hex_output,NULL);
++				}
++				else
++					selected->password = stredup(pass_editbox.GetText(),NULL);
 +				selected->admin = stredup(aname_editbox.GetText(),NULL);
 +				selected->adminpass = stredup(apass_editbox.GetText(),NULL);
 +				CSettings::get().SaveCommunities();
@@ -738,9 +714,6 @@ diff -r 8a569cf4a639 src/nc_intro_gui.cpp
 +{
 +	AllocateWindowDescFront<LinksListGui>(&_links_list_desc, 0);
 +} 
-<<<<<<< local
-diff -r 29e0552d3ea4 src/nc_intro_gui.h
-=======
 +/*
 +	ADD COMMUNITY
 +*/
@@ -804,16 +777,10 @@ diff -r 29e0552d3ea4 src/nc_intro_gui.h
 +{
 +	AllocateWindowDescFront<AddCommunityGui>(&_add_comm_desc, 0);
 +} 
-diff -r 8a569cf4a639 src/nc_intro_gui.h
->>>>>>> other
+diff -r eb61cc4d48b4 src/nc_intro_gui.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-<<<<<<< local
-+++ b/src/nc_intro_gui.h	Fri Apr 03 09:57:22 2015 +0100
-@@ -0,0 +1,8 @@
-=======
-+++ b/src/nc_intro_gui.h	Thu Apr 02 22:28:21 2015 +0100
++++ b/src/nc_intro_gui.h	Fri Apr 03 23:31:21 2015 +0100
 @@ -0,0 +1,9 @@
->>>>>>> other
 +#ifndef COMC_INTRO_GUI_H
 +#define COMC_INTRO_GUI_H
 +#include "stdafx.h"
@@ -823,17 +790,10 @@ diff -r 8a569cf4a639 src/nc_intro_gui.h
 +void ShowAddCommunity(); 
 +
 +#endif
-<<<<<<< local
-diff -r 29e0552d3ea4 src/widgets/intro_widget.h
---- a/src/widgets/intro_widget.h	Sat Feb 28 20:12:34 2015 +0000
-+++ b/src/widgets/intro_widget.h	Fri Apr 03 09:57:22 2015 +0100
-@@ -33,6 +33,23 @@
-=======
-diff -r 8a569cf4a639 src/widgets/intro_widget.h
---- a/src/widgets/intro_widget.h	Thu Apr 02 21:37:45 2015 +0100
-+++ b/src/widgets/intro_widget.h	Thu Apr 02 22:28:21 2015 +0100
+diff -r eb61cc4d48b4 src/widgets/intro_widget.h
+--- a/src/widgets/intro_widget.h	Fri Apr 03 23:20:13 2015 +0100
++++ b/src/widgets/intro_widget.h	Fri Apr 03 23:31:21 2015 +0100
 @@ -33,6 +33,25 @@
->>>>>>> other
  	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
  	WID_SGI_AI_SETTINGS,           ///< AI button.
  	WID_SGI_EXIT,                  ///< Exit button.
@@ -859,13 +819,13 @@ diff -r 8a569cf4a639 src/widgets/intro_widget.h
  
 +
  #endif /* WIDGETS_INTRO_WIDGET_H */
-diff -r 8a569cf4a639 src/window_type.h
---- a/src/window_type.h	Thu Apr 02 21:37:45 2015 +0100
-+++ b/src/window_type.h	Thu Apr 02 22:28:21 2015 +0100
-@@ -682,6 +682,18 @@
- 	 *   - 0 = #SavePresetWidgets
- 	 */
+diff -r eb61cc4d48b4 src/window_type.h
+--- a/src/window_type.h	Fri Apr 03 23:20:13 2015 +0100
++++ b/src/window_type.h	Fri Apr 03 23:31:21 2015 +0100
+@@ -684,6 +684,18 @@
  	WC_SAVE_PRESET,
+ 	
+ 	WC_NC_COMM_WINDOW,
 +	/*
 +	* Account Menu window
 +	*/

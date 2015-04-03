@@ -1,0 +1,125 @@
+# HG changeset patch
+# Parent  6e0edf63803d44fe8706284cb284bda527c5b6ec
+
+diff -r 6e0edf63803d source.list
+--- a/source.list	Fri Apr 03 23:20:08 2015 +0100
++++ b/source.list	Sat Apr 04 00:04:01 2015 +0100
+@@ -54,6 +54,7 @@
+ misc.cpp
+ mixer.cpp
+ music.cpp
++nc_community_window.cpp
+ nc_csettings.cpp
+ nc_util.cpp
+ network/network.cpp
+@@ -242,6 +243,7 @@
+ map_func.h
+ map_type.h
+ mixer.h
++nc_community_window.h
+ nc_csettings.h
+ nc_receiver.h
+ nc_util.h
+diff -r 6e0edf63803d src/lang/english.txt
+--- a/src/lang/english.txt	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/lang/english.txt	Sat Apr 04 00:04:01 2015 +0100
+@@ -5004,7 +5004,8 @@
+ STR_TTE_STATION                                                 :{WHITE}{STRING}  {BLACK}{CARGO_SHORT} {YELLOW}{NUM} %
+ 
+ # Patches Menu
+-STR_WATCH_WINDOW                                                :Watch Company
++STR_WATCH_WINDOW                                                :{BLACK}Watch Company
++STR_COMMUNITY_WINDOW                                            :{BLACK}Community Window
+ 
+ # watch window
+ STR_WATCH_WINDOW_TITLE                                          :{WHITE}Watching {RAW_STRING}.
+@@ -5037,3 +5038,9 @@
+ STR_NC_ADMIN_LOGIN                                              :{BLACK}Admin Login
+ STR_NC_ADMIN_LOGOUT                                             :{BLACK}Admin Logout
+ STR_NC_CLIENTLIST_GET_TOKEN                                     :{LTBLUE}Token Login
++STR_NC_COMMUNITY_WINDOW                                         :{BLACK}Community window
++STR_NC_TOKEN_WELCOME                                            :{BLACK}Welcome back {WHITE}{RAW_STRING}{BLACK} :)
++STR_NC_TOKEN_CLICK_ME                                           :{BLACK}Click the big button to Login automatically
++STR_NC_TOKEN_ENJOY                                              :{BLACK}  Respect the rules and enjoy the game. :)
++STR_NC_TOKEN_LOGIN                                              :{LTBLUE}Get Token --> Login
++STR_NC_TOKEN_LOGIN_TOOLTIP                                      :{BLACK}Get Token from website and executes !login XXXX
+diff -r 6e0edf63803d src/toolbar_gui.cpp
+--- a/src/toolbar_gui.cpp	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/toolbar_gui.cpp	Sat Apr 04 00:04:01 2015 +0100
+@@ -56,6 +56,9 @@
+ 
+ #include "watch_gui.h"
+ 
++#include "nc_community_window.h"
++#include "nc_csettings.h"
++
+ #include "safeguards.h"
+ 
+ 
+@@ -566,7 +569,7 @@
+ /* --- Slot for patches --- */
+ static CallBackFunction ToolbarPatchesClick(Window *w)
+ {
+-	PopupMainToolbMenu(w, WID_TN_PATCHES, STR_WATCH_WINDOW, 1);
++	PopupMainToolbMenu(w, WID_TN_PATCHES, STR_WATCH_WINDOW, 2);
+ 	return CBF_NONE;
+ }
+ /**
+@@ -578,7 +581,8 @@
+ static CallBackFunction MenuClickPatches(int index)
+ {
+ 	switch (index) {
+-		case 0: ShowWatchWindow((CompanyID)INVALID_COMPANY );
++		case 0: ShowWatchWindow((CompanyID)INVALID_COMPANY );break;
++		case 1: ShowCommunityWindow();break;
+ 	}
+ 	return CBF_NONE;
+ }
+@@ -1674,6 +1678,7 @@
+ 	MTHK_EXTRA_VIEWPORT,
+ 	MTHK_CLIENT_LIST,
+ 	MTHK_SIGN_LIST,
++	MTHK_NC_COMM_WINDOW,
+ };
+ 
+ /** Main toolbar. */
+@@ -1767,6 +1772,7 @@
+ 			case MTHK_EXTRA_VIEWPORT: ShowExtraViewPortWindowForTileUnderCursor(); break;
+ #ifdef ENABLE_NETWORK
+ 			case MTHK_CLIENT_LIST: if (_networking) ShowClientList(); break;
++			case MTHK_NC_COMM_WINDOW: if (_networking && CSettings::get().GetSelected() != NULL) ShowCommunityWindow(); break;
+ #endif
+ 			case MTHK_SIGN_LIST: ShowSignList(); break;
+ 			default: return ES_NOT_HANDLED;
+@@ -1872,6 +1878,7 @@
+ 	Hotkey('V', "extra_viewport", MTHK_EXTRA_VIEWPORT),
+ #ifdef ENABLE_NETWORK
+ 	Hotkey((uint16)0, "client_list", MTHK_CLIENT_LIST),
++	Hotkey('N', "community_window", MTHK_NC_COMM_WINDOW),
+ #endif
+ 	Hotkey((uint16)0, "sign_list", MTHK_SIGN_LIST),
+ 	HOTKEY_LIST_END
+@@ -2265,5 +2272,11 @@
+ 		new ScenarioEditorToolbarWindow(&_toolb_scen_desc);
+ 	} else {
+ 		new MainToolbarWindow(&_toolb_normal_desc);
++#ifdef ENABLE_NETWORK
++		if (_networking && CSettings::get().GetSelected() != NULL) { //extra windows upon join
++			ShowClientList();
++			ShowCommunityWindow();
++		}
++#endif /* ENABLE_NETWORK */
+ 	}
+ }
+diff -r 6e0edf63803d src/window_type.h
+--- a/src/window_type.h	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/window_type.h	Sat Apr 04 00:04:01 2015 +0100
+@@ -682,6 +682,8 @@
+ 	 *   - 0 = #SavePresetWidgets
+ 	 */
+ 	WC_SAVE_PRESET,
++	
++	WC_NC_COMM_WINDOW,
+ 
+ 	WC_INVALID = 0xFFFF, ///< Invalid window.
+ };
