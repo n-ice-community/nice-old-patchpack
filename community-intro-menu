@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent  cb423226ff4fd7c2491c8cc44bec2be9293d948d
+# Parent  63c6a8adb5219b31de4c8c0ff34673ef92d67002
 <<<<<<< local
 # Parent  29e0552d3ea4b59e6d29df6495487ca4768a61f1
 =======
@@ -8,9 +8,9 @@
 
 <<<<<<< local
 
-diff -r cb423226ff4f source.list
---- a/source.list	Sun Apr 05 11:46:38 2015 +0100
-+++ b/source.list	Sun Apr 05 13:20:28 2015 +0100
+diff -r 63c6a8adb521 source.list
+--- a/source.list	Sun Apr 05 14:01:31 2015 +0100
++++ b/source.list	Sun Apr 05 18:19:44 2015 +0100
 @@ -56,6 +56,7 @@
  music.cpp
  nc_community_window.cpp
@@ -27,9 +27,9 @@ diff -r cb423226ff4f source.list
  nc_receiver.h
  nc_util.h
  network/network.h
-diff -r cb423226ff4f src/intro_gui.cpp
---- a/src/intro_gui.cpp	Sun Apr 05 11:46:38 2015 +0100
-+++ b/src/intro_gui.cpp	Sun Apr 05 13:20:28 2015 +0100
+diff -r 63c6a8adb521 src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Sun Apr 05 14:01:31 2015 +0100
++++ b/src/intro_gui.cpp	Sun Apr 05 18:19:44 2015 +0100
 @@ -10,6 +10,7 @@
  /** @file intro_gui.cpp The main menu GUI. */
  
@@ -376,9 +376,9 @@ diff -r cb423226ff4f src/intro_gui.cpp
  };
  
  static WindowDesc _select_game_desc(
-diff -r cb423226ff4f src/lang/english.txt
---- a/src/lang/english.txt	Sun Apr 05 11:46:38 2015 +0100
-+++ b/src/lang/english.txt	Sun Apr 05 13:20:28 2015 +0100
+diff -r 63c6a8adb521 src/lang/english.txt
+--- a/src/lang/english.txt	Sun Apr 05 14:01:31 2015 +0100
++++ b/src/lang/english.txt	Sun Apr 05 18:19:44 2015 +0100
 @@ -5033,6 +5033,23 @@
  
  # Town gui extended
@@ -403,10 +403,10 @@ diff -r cb423226ff4f src/lang/english.txt
  STR_NC_NO_USER_OR_PASS                                          :{WHITE}Username or password not defined...
  STR_NC_OTHER_TOKEN_LOGIN_ERROR                                  :{WHITE}Login failed, invalid token
  STR_NC_ADMIN_LOGIN                                              :{BLACK}Admin Login
-diff -r cb423226ff4f src/nc_intro_gui.cpp
+diff -r 63c6a8adb521 src/nc_intro_gui.cpp
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_intro_gui.cpp	Sun Apr 05 13:20:28 2015 +0100
-@@ -0,0 +1,389 @@
++++ b/src/nc_intro_gui.cpp	Sun Apr 05 18:19:44 2015 +0100
+@@ -0,0 +1,407 @@
 +#include "nc_intro_gui.h"
 +#include "nc_csettings.h"
 +#include "strings_func.h"
@@ -449,10 +449,12 @@ diff -r cb423226ff4f src/nc_intro_gui.cpp
 +{
 +	QueryString name_editbox; 
 +	QueryString pass_editbox;
++	bool pass_changed;
 +	QueryString aname_editbox; 
 +	QueryString apass_editbox;
++	bool apass_changed;
 +	public:
-+	AccountMenuGui(WindowDesc *desc, int window_number) : Window(desc),name_editbox(15),pass_editbox(15),aname_editbox(15),apass_editbox(15)
++	AccountMenuGui(WindowDesc *desc, int window_number) : Window(desc),name_editbox(15),pass_editbox(15),aname_editbox(15),apass_editbox(15), pass_changed(false), apass_changed(false)
 +	{
 +		this->querystrings[WID_AM_USER_SET] = &this->name_editbox;
 +		this->querystrings[WID_AM_PASSWORD_SET] = &this->pass_editbox;
@@ -502,6 +504,18 @@ diff -r cb423226ff4f src/nc_intro_gui.cpp
 +			break;
 +		}
 +	}
++	virtual void OnEditboxChanged(int widget)
++	{
++		switch(widget)
++		{
++			case WID_AM_PASSWORD_SET:
++				pass_changed = true;
++			break;
++			case WID_AM_APASSWORD_SET:
++				apass_changed = true;
++			break;
++		}
++	}
 +	virtual void OnClick(Point pt, int widget, int click_count)
 +	{
 +		switch (widget)
@@ -515,23 +529,27 @@ diff -r cb423226ff4f src/nc_intro_gui.cpp
 +					return;
 +				}
 +				selected->username = stredup(name_editbox.GetText(),NULL);
-+				if(selected->login_method == TOKEN_MD5)
++				if(pass_changed)
 +				{
-+					Md5 password;
-+					password.Append(pass_editbox.GetText(), strlen(pass_editbox.GetText()));
-+					uint8 digest[16];
-+					char hex_output[16 * 2 + 1];
-+					password.Finish(digest);
-+					for (int di = 0; di < 16; ++di) 
++					if(selected->login_method == TOKEN_MD5)
 +					{
-+						seprintf(hex_output + di * 2, lastof(hex_output), "%02x", digest[di]);
-+					};
-+					selected->password = stredup(hex_output,NULL);
++						Md5 password;
++						password.Append(pass_editbox.GetText(), strlen(pass_editbox.GetText()));
++						uint8 digest[16];
++						char hex_output[16 * 2 + 1];
++						password.Finish(digest);
++						for (int di = 0; di < 16; ++di) 
++						{
++							seprintf(hex_output + di * 2, lastof(hex_output), "%02x", digest[di]);
++						}
++						selected->password = stredup(hex_output,NULL);
++					}
++					else
++						selected->password = stredup(pass_editbox.GetText(),NULL);
 +				}
-+				else
-+					selected->password = stredup(pass_editbox.GetText(),NULL);
 +				selected->admin = stredup(aname_editbox.GetText(),NULL);
-+				selected->adminpass = stredup(apass_editbox.GetText(),NULL);
++				if(apass_changed)
++					selected->adminpass = stredup(apass_editbox.GetText(),NULL);
 +				CSettings::get().SaveCommunities();
 +			}
 +			default:
@@ -796,9 +814,9 @@ diff -r cb423226ff4f src/nc_intro_gui.cpp
 +{
 +	AllocateWindowDescFront<AddCommunityGui>(&_add_comm_desc, 0);
 +} 
-diff -r cb423226ff4f src/nc_intro_gui.h
+diff -r 63c6a8adb521 src/nc_intro_gui.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_intro_gui.h	Sun Apr 05 13:20:28 2015 +0100
++++ b/src/nc_intro_gui.h	Sun Apr 05 18:19:44 2015 +0100
 @@ -0,0 +1,9 @@
 +#ifndef COMC_INTRO_GUI_H
 +#define COMC_INTRO_GUI_H
@@ -809,9 +827,9 @@ diff -r cb423226ff4f src/nc_intro_gui.h
 +void ShowAddCommunity(); 
 +
 +#endif
-diff -r cb423226ff4f src/widgets/intro_widget.h
---- a/src/widgets/intro_widget.h	Sun Apr 05 11:46:38 2015 +0100
-+++ b/src/widgets/intro_widget.h	Sun Apr 05 13:20:28 2015 +0100
+diff -r 63c6a8adb521 src/widgets/intro_widget.h
+--- a/src/widgets/intro_widget.h	Sun Apr 05 14:01:31 2015 +0100
++++ b/src/widgets/intro_widget.h	Sun Apr 05 18:19:44 2015 +0100
 @@ -33,6 +33,25 @@
  	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
  	WID_SGI_AI_SETTINGS,           ///< AI button.
@@ -838,9 +856,9 @@ diff -r cb423226ff4f src/widgets/intro_widget.h
  
 +
  #endif /* WIDGETS_INTRO_WIDGET_H */
-diff -r cb423226ff4f src/window_type.h
---- a/src/window_type.h	Sun Apr 05 11:46:38 2015 +0100
-+++ b/src/window_type.h	Sun Apr 05 13:20:28 2015 +0100
+diff -r 63c6a8adb521 src/window_type.h
+--- a/src/window_type.h	Sun Apr 05 14:01:31 2015 +0100
++++ b/src/window_type.h	Sun Apr 05 18:19:44 2015 +0100
 @@ -684,6 +684,18 @@
  	WC_SAVE_PRESET,
  	

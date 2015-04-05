@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent  24083fc281aa57ee0f611b740e19ced8686aa665
+# Parent  61b6d611282afa6493c3118d7b60164b3bb37d35
 
-diff -r 24083fc281aa projects/langs_vs100.vcxproj
---- a/projects/langs_vs100.vcxproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/langs_vs100.vcxproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/langs_vs100.vcxproj
+--- a/projects/langs_vs100.vcxproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/langs_vs100.vcxproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,384 +1,384 @@
 -<?xml version="1.0" encoding="utf-8"?>
 -<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -773,9 +773,9 @@ diff -r 24083fc281aa projects/langs_vs100.vcxproj
 +  <ImportGroup Label="ExtensionTargets">
 +  </ImportGroup>
 +</Project>
-diff -r 24083fc281aa projects/langs_vs100.vcxproj.filters
---- a/projects/langs_vs100.vcxproj.filters	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/langs_vs100.vcxproj.filters	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/langs_vs100.vcxproj.filters
+--- a/projects/langs_vs100.vcxproj.filters	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/langs_vs100.vcxproj.filters	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,173 +1,173 @@
 -<?xml version="1.0" encoding="utf-8"?>
 -<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -1123,9 +1123,9 @@ diff -r 24083fc281aa projects/langs_vs100.vcxproj.filters
 +    </CustomBuild>
 +  </ItemGroup>
 +</Project>
-diff -r 24083fc281aa projects/langs_vs80.vcproj
---- a/projects/langs_vs80.vcproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/langs_vs80.vcproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/langs_vs80.vcproj
+--- a/projects/langs_vs80.vcproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/langs_vs80.vcproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,880 +1,880 @@
 -<?xml version="1.0" encoding="Windows-1252"?>
 -<VisualStudioProject
@@ -2887,9 +2887,9 @@ diff -r 24083fc281aa projects/langs_vs80.vcproj
 +	<Globals>
 +	</Globals>
 +</VisualStudioProject>
-diff -r 24083fc281aa projects/langs_vs90.vcproj
---- a/projects/langs_vs90.vcproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/langs_vs90.vcproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/langs_vs90.vcproj
+--- a/projects/langs_vs90.vcproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/langs_vs90.vcproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,881 +1,881 @@
 -<?xml version="1.0" encoding="Windows-1252"?>
 -<VisualStudioProject
@@ -4653,9 +4653,9 @@ diff -r 24083fc281aa projects/langs_vs90.vcproj
 +	<Globals>
 +	</Globals>
 +</VisualStudioProject>
-diff -r 24083fc281aa projects/openttd_vs100.vcxproj
---- a/projects/openttd_vs100.vcxproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/openttd_vs100.vcxproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/openttd_vs100.vcxproj
+--- a/projects/openttd_vs100.vcxproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/openttd_vs100.vcxproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,1293 +1,1309 @@
 -<?xml version="1.0" encoding="utf-8"?>
 -<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -7260,9 +7260,9 @@ diff -r 24083fc281aa projects/openttd_vs100.vcxproj
 +  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 +</Project>
 \ No newline at end of file
-diff -r 24083fc281aa projects/openttd_vs100.vcxproj.filters
---- a/projects/openttd_vs100.vcxproj.filters	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/openttd_vs100.vcxproj.filters	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/openttd_vs100.vcxproj.filters
+--- a/projects/openttd_vs100.vcxproj.filters	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/openttd_vs100.vcxproj.filters	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,3047 +1,3089 @@
 -<?xml version="1.0" encoding="utf-8"?>
 -<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -13400,9 +13400,9 @@ diff -r 24083fc281aa projects/openttd_vs100.vcxproj.filters
 +    <None Include="..\readme.txt" />
 +  </ItemGroup>
 +</Project>
-diff -r 24083fc281aa projects/openttd_vs80.vcproj
---- a/projects/openttd_vs80.vcproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/openttd_vs80.vcproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/openttd_vs80.vcproj
+--- a/projects/openttd_vs80.vcproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/openttd_vs80.vcproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,4493 +1,4549 @@
 -<?xml version="1.0" encoding="Windows-1252"?>
 -<VisualStudioProject
@@ -22446,9 +22446,9 @@ diff -r 24083fc281aa projects/openttd_vs80.vcproj
 +	<Globals>
 +	</Globals>
 +</VisualStudioProject>
-diff -r 24083fc281aa projects/openttd_vs90.vcproj
---- a/projects/openttd_vs90.vcproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/openttd_vs90.vcproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/openttd_vs90.vcproj
+--- a/projects/openttd_vs90.vcproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/openttd_vs90.vcproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,4490 +1,4546 @@
 -<?xml version="1.0" encoding="Windows-1252"?>
 -<VisualStudioProject
@@ -31486,9 +31486,9 @@ diff -r 24083fc281aa projects/openttd_vs90.vcproj
 +	<Globals>
 +	</Globals>
 +</VisualStudioProject>
-diff -r 24083fc281aa projects/settings_vs100.vcxproj
---- a/projects/settings_vs100.vcxproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/settings_vs100.vcxproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/settings_vs100.vcxproj
+--- a/projects/settings_vs100.vcxproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/settings_vs100.vcxproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,54 +1,54 @@
 -﻿<?xml version="1.0" encoding="utf-8"?>
 -<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -31598,9 +31598,9 @@ diff -r 24083fc281aa projects/settings_vs100.vcxproj
 +  <ImportGroup Label="ExtensionTargets">
 +  </ImportGroup>
 +</Project>
-diff -r 24083fc281aa projects/settings_vs100.vcxproj.filters
---- a/projects/settings_vs100.vcxproj.filters	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/settings_vs100.vcxproj.filters	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/settings_vs100.vcxproj.filters
+--- a/projects/settings_vs100.vcxproj.filters	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/settings_vs100.vcxproj.filters	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,35 +1,35 @@
 -﻿<?xml version="1.0" encoding="utf-8"?>
 -<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -31672,9 +31672,9 @@ diff -r 24083fc281aa projects/settings_vs100.vcxproj.filters
 +    <None Include="..\src\table\settings.h.preamble" />
 +  </ItemGroup>
 +</Project>
-diff -r 24083fc281aa projects/settings_vs80.vcproj
---- a/projects/settings_vs80.vcproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/settings_vs80.vcproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/settings_vs80.vcproj
+--- a/projects/settings_vs80.vcproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/settings_vs80.vcproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,87 +1,87 @@
 -<?xml version="1.0" encoding="Windows-1252"?>
 -<VisualStudioProject
@@ -31850,9 +31850,9 @@ diff -r 24083fc281aa projects/settings_vs80.vcproj
 +	<Globals>
 +	</Globals>
 +</VisualStudioProject>
-diff -r 24083fc281aa projects/settings_vs90.vcproj
---- a/projects/settings_vs90.vcproj	Sun Apr 05 14:01:32 2015 +0100
-+++ b/projects/settings_vs90.vcproj	Sun Apr 05 14:07:31 2015 +0100
+diff -r 61b6d611282a projects/settings_vs90.vcproj
+--- a/projects/settings_vs90.vcproj	Sun Apr 05 18:19:48 2015 +0100
++++ b/projects/settings_vs90.vcproj	Sun Apr 05 18:35:06 2015 +0100
 @@ -1,88 +1,88 @@
 -<?xml version="1.0" encoding="Windows-1252"?>
 -<VisualStudioProject
