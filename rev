@@ -1,53 +1,14 @@
 # HG changeset patch
-# Parent  af99ef9cf1a515c334a62a53035c8b2a004c95cc
+# Parent  52c3535b6df977c327d9cb49b328da8bc3f666a0
 
-diff -r af99ef9cf1a5 .hgtags
+diff -r 52c3535b6df9 .hgtags
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/.hgtags	Fri Apr 03 22:33:28 2015 +0100
++++ b/.hgtags	Sun Apr 05 14:48:27 2015 +0100
 @@ -0,0 +1,1 @@
 +5dac82e6fed8c3522692ba2924c36e004ef6b11e 1.5.0
-diff -r af99ef9cf1a5 src/nc_intro_gui.cpp
---- a/src/nc_intro_gui.cpp	Fri Apr 03 22:33:21 2015 +0100
-+++ b/src/nc_intro_gui.cpp	Fri Apr 03 22:33:28 2015 +0100
-@@ -334,15 +334,13 @@
- };
- class AddCommunityGui : public Window
- {
--	QueryString name_editbox; ///< Message editbox.
- 	QueryString link_editbox;    ///< Editbox.
- 	public:
--	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), name_editbox(50),link_editbox(200) 
-+	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), link_editbox(200) 
- 	{
--		this->querystrings[WID_AC_NAME] = &this->name_editbox;
- 		this->querystrings[WID_AC_LINK] = &this->link_editbox;
- 		this->InitNested(window_number);
--		this->SetFocusedWidget(WID_AC_NAME);
-+		this->SetFocusedWidget(WID_AC_LINK);
- 	}
- 	virtual void DrawWidget(const Rect &r, int widget) const
- 	{
-@@ -352,7 +350,7 @@
- 		switch(widget)
- 		{
- 			case WID_AC_CONFIRM:
--				CSettings::get().AddCommunity(name_editbox.GetText(),link_editbox.GetText());
-+				CSettings::get().AddCommunity("Undefined",link_editbox.GetText());
- 			break;
- 		}
- 	}
-@@ -367,8 +365,6 @@
- 	EndContainer(),
- 	NWidget(WWT_PANEL, COLOUR_WHITE),
- 	NWidget(NWID_VERTICAL),SetPadding(7),
--		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_COMMUNITY,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
--		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_NAME), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
- 		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_LINK,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
- 		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_LINK), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
- 		NWidget(WWT_TEXTBTN,COLOUR_ORANGE,WID_AC_CONFIRM),SetDataTip(STR_NC_CONFIRM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
-diff -r af99ef9cf1a5 src/rev.cpp.in
---- a/src/rev.cpp.in	Fri Apr 03 22:33:21 2015 +0100
-+++ b/src/rev.cpp.in	Fri Apr 03 22:33:28 2015 +0100
+diff -r 52c3535b6df9 src/rev.cpp.in
+--- a/src/rev.cpp.in	Sun Apr 05 14:45:13 2015 +0100
++++ b/src/rev.cpp.in	Sun Apr 05 14:48:27 2015 +0100
 @@ -39,7 +39,7 @@
   * norev000 is for non-releases that are made on systems without
   * subversion or sources that are not a checkout of subversion.

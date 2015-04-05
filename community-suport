@@ -4,7 +4,7 @@
 
 diff -r 06f6b5dd055b source.list
 --- a/source.list	Fri Apr 03 12:23:11 2015 +0100
-+++ b/source.list	Fri Apr 03 23:20:08 2015 +0100
++++ b/source.list	Sun Apr 05 14:45:11 2015 +0100
 @@ -54,6 +54,8 @@
  misc.cpp
  mixer.cpp
@@ -26,7 +26,7 @@ diff -r 06f6b5dd055b source.list
  network/network_base.h
 diff -r 06f6b5dd055b src/fileio.cpp
 --- a/src/fileio.cpp	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/fileio.cpp	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/fileio.cpp	Sun Apr 05 14:45:11 2015 +0100
 @@ -293,6 +293,7 @@
  	"game" PATHSEP,
  	"game" PATHSEP "library" PATHSEP,
@@ -57,7 +57,7 @@ diff -r 06f6b5dd055b src/fileio.cpp
  	for (uint i = 0; i < lengthof(default_subdirs); i++) {
 diff -r 06f6b5dd055b src/fileio_type.h
 --- a/src/fileio_type.h	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/fileio_type.h	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/fileio_type.h	Sun Apr 05 14:45:11 2015 +0100
 @@ -33,6 +33,7 @@
  	GAME_DIR,      ///< Subdirectory for all game scripts
  	GAME_LIBRARY_DIR, ///< Subdirectory for all GS libraries
@@ -68,7 +68,7 @@ diff -r 06f6b5dd055b src/fileio_type.h
  };
 diff -r 06f6b5dd055b src/ini_load.cpp
 --- a/src/ini_load.cpp	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/ini_load.cpp	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/ini_load.cpp	Sun Apr 05 14:45:11 2015 +0100
 @@ -323,3 +323,120 @@
  	fclose(in);
  }
@@ -192,7 +192,7 @@ diff -r 06f6b5dd055b src/ini_load.cpp
 +}
 diff -r 06f6b5dd055b src/ini_type.h
 --- a/src/ini_type.h	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/ini_type.h	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/ini_type.h	Sun Apr 05 14:45:11 2015 +0100
 @@ -12,6 +12,7 @@
  #ifndef INI_TYPE_H
  #define INI_TYPE_H
@@ -211,7 +211,7 @@ diff -r 06f6b5dd055b src/ini_type.h
  	 * Open the INI file.
 diff -r 06f6b5dd055b src/intro_gui.cpp
 --- a/src/intro_gui.cpp	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/intro_gui.cpp	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/intro_gui.cpp	Sun Apr 05 14:45:11 2015 +0100
 @@ -9,6 +9,8 @@
  
  /** @file intro_gui.cpp The main menu GUI. */
@@ -223,7 +223,7 @@ diff -r 06f6b5dd055b src/intro_gui.cpp
  #include "gui.h"
 diff -r 06f6b5dd055b src/lang/english.txt
 --- a/src/lang/english.txt	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/lang/english.txt	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/lang/english.txt	Sun Apr 05 14:45:11 2015 +0100
 @@ -5032,3 +5032,8 @@
  
  # Town gui extended
@@ -235,12 +235,11 @@ diff -r 06f6b5dd055b src/lang/english.txt
 +STR_NC_CLIENTLIST_GET_TOKEN                                     :{LTBLUE}Token Login
 diff -r 06f6b5dd055b src/nc_csettings.cpp
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_csettings.cpp	Fri Apr 03 23:20:08 2015 +0100
-@@ -0,0 +1,688 @@
++++ b/src/nc_csettings.cpp	Sun Apr 05 14:45:11 2015 +0100
+@@ -0,0 +1,698 @@
 +#include "nc_csettings.h"
 +#include "network/network_content.h"
 +#include "fileio_func.h"
-+#include "nc_util.h"
 +#include "safeguards.h"
 +
 +#if defined(WIN32) || defined(WIN64)
@@ -287,7 +286,7 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +CSettings::CSettings()
 +{
 +	community_file = str_fmt("%scommunities.cfg", _community_dir);
-+	this->selected = 0;
++	this->selected = -1;
 +	if(FileExists(community_file)) // Load from file
 +		LoadCommunities();
 +}
@@ -347,13 +346,19 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +{
 +	return community_list.Length();
 +}
-+void CSettings::RegistToWait(void (*thereWasAnUpdate)(void))
++void CSettings::Regist(Observer* o)
 +{
-+	this->thereWasAnUpdate = thereWasAnUpdate;
++	observer = o;
 +}
 +void CSettings::RegistUpdate()
 +{
-+	if(thereWasAnUpdate) thereWasAnUpdate();
++	// TODO BETTER IMPLEMENTATION
++	if(observer != NULL)
++		observer->notify();
++}
++void CSettings::UnRegist(Observer* o)
++{
++	observer = NULL;
 +}
 +Community *CSettings::GetSelected()
 +{
@@ -466,8 +471,6 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +	this->linklist_url = stredup(item->value,NULL);
 +	
 +	this->display_name = (item = group->GetItem("display_name",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
-+	if((item =group->GetItem("selected",false)) != NULL && strcmp(item->value,"true") == 0)
-+		result = true;
 +	item = group->GetItem("serverlist",false);
 +	
 +	this->serverlist_url = (item = group->GetItem("serverlist",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
@@ -480,14 +483,18 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +			this->modified = 0;
 +	else
 +		this->modified = static_cast<time_t>(atol(item->value));
++	this->login_url = (item = group->GetItem("login_url",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
++	this->login_method = (item = group->GetItem("login_method",false)) == NULL || item->value == NULL ? TOKEN : static_cast<enum LoginMethod>(atoi(item->value));
++	this->login_command = (item = group->GetItem("login_command",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +	
++	if(update)
++		return false;
++	if((item =group->GetItem("selected",false)) != NULL && strcmp(item->value,"true") == 0)
++		result = true;
 +	this->username = (item = group->GetItem("username",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +	this->password = (item = group->GetItem("password",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +	this->admin = (item = group->GetItem("admin",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +	this->adminpass = (item = group->GetItem("adminpass",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
-+	this->login_url = (item = group->GetItem("login_url",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
-+	this->login_method = (item = group->GetItem("login_method",false)) == NULL || item->value == NULL ? TOKEN : static_cast<enum LoginMethod>(atoi(item->value));
-+	this->login_command = (item = group->GetItem("login_command",false)) == NULL || item->value == NULL ? '\0' : stredup(item->value,NULL);
 +
 +	return result;
 +}
@@ -550,7 +557,12 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +	}
 +	return this->servergroup_list == NULL ? NULL: this->servergroup_list->GetSelected();
 +}
-+
++bool Community::HasLoginCredentials()
++{
++	if(username != NULL && password != NULL && strlen(username) > 1 && strlen(password) > 1)
++		return true;
++	return false;
++}
 +ServerList::ServerList(char *file,char *link) : link(NULL), file(NULL), modified(0), out_of_sync(false)
 +{
 +	this->file = file;
@@ -626,7 +638,6 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +		temp->uid = (item = group->GetItem("uid",false)) == NULL || item->value == NULL ? 0 : atoi(item->value);
 +		*this->data.Append() = temp;
 +	}
-+	delete ini;	
 +}
 +
 +void ServerList::Save()
@@ -789,7 +800,6 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +		}
 +		*this->data.Append() = temp;
 +	}
-+	delete ini;	
 +}
 +
 +void ServerGroupList::Save()
@@ -927,12 +937,13 @@ diff -r 06f6b5dd055b src/nc_csettings.cpp
 +}
 diff -r 06f6b5dd055b src/nc_csettings.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_csettings.h	Fri Apr 03 23:20:08 2015 +0100
-@@ -0,0 +1,183 @@
++++ b/src/nc_csettings.h	Sun Apr 05 14:45:11 2015 +0100
+@@ -0,0 +1,188 @@
 +#ifndef NC_CSETTINGS_H
 +#define NC_CSETTINGS_H
 +
 +#include "nc_receiver.h"
++#include "nc_util.h"
 +#include "stdafx.h"
 +#include "gfx_type.h"
 +#include "ini_type.h"
@@ -941,6 +952,8 @@ diff -r 06f6b5dd055b src/nc_csettings.h
 +#include "misc/fixedsizearray.hpp"
 +#include <string>
 +#include <ctime>
++// TODO better encapsulation
++class Observer;
 +
 +struct Server
 +{
@@ -1055,6 +1068,7 @@ diff -r 06f6b5dd055b src/nc_csettings.h
 +	char* login_url;
 +	char* login_command;
 +	enum LoginMethod login_method;
++	bool HasLoginCredentials();
 +	ServerList* GetServerList();
 +	ServerGroup* GetServerGroup();
 +	ServerGroupList* GetGroups();
@@ -1082,9 +1096,9 @@ diff -r 06f6b5dd055b src/nc_csettings.h
 +class CSettings 
 +{
 +private:
-+	void (*thereWasAnUpdate)(void);
 +	char *community_file;
 +	FixedSizeArray<Community*,10> community_list ;
++	Observer* observer; // TODO for now 1 is enough
 +	int selected;
 +	
 +	CSettings();
@@ -1104,17 +1118,18 @@ diff -r 06f6b5dd055b src/nc_csettings.h
 +	char *GetCommunityName(int);
 +	int Selected(); 
 +	
++	void Regist(Observer*);
++	void RegistUpdate();
++	void UnRegist(Observer*);
++	
 +	void LoadCommunities();
 +	void SaveCommunities();
 +	void AddCommunity(const char*, const char*);
-+	
-+	void RegistToWait(void (*thereWasAnUpdate)(void)); // Poor man observer ? :D
-+	void RegistUpdate();
 +};
 +#endif
 diff -r 06f6b5dd055b src/nc_receiver.h
 --- a/src/nc_receiver.h	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/nc_receiver.h	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/nc_receiver.h	Sun Apr 05 14:45:11 2015 +0100
 @@ -1,3 +1,6 @@
 +#ifndef NC_RECEIVER_H
 +#define NC_RECEIVER_H
@@ -1128,9 +1143,134 @@ diff -r 06f6b5dd055b src/nc_receiver.h
  };
 +
 +#endif
+diff -r 06f6b5dd055b src/nc_util.cpp
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_util.cpp	Sun Apr 05 14:45:11 2015 +0100
+@@ -0,0 +1,96 @@
++#include "nc_util.h"
++#include "stdafx.h"
++#include "network/network_content.h"
++#include "error.h"
++#include "strings_func.h"
++#include "table/strings.h"
++#include "network/network.h"
++#include "network/network_func.h"
++#include "safeguards.h"
++std::string char2hex( char dec )
++{
++	char dig1 = (dec&0xF0)>>4;
++	char dig2 = (dec&0x0F);
++	if ( 0<= dig1 && dig1<= 9) dig1+=48;    //0,48inascii
++	if (10<= dig1 && dig1<=15) dig1+=97-10; //a,97inascii
++	if ( 0<= dig2 && dig2<= 9) dig2+=48;
++	if (10<= dig2 && dig2<=15) dig2+=97-10;
++
++	std::string r;
++	r.append( &dig1, 1);
++	r.append( &dig2, 1);
++	return r;
++}
++
++std::string urlencode(const std::string &c)
++{
++	std::string escaped="";
++	int max = c.length();
++	for(int i=0; i<max; i++)
++	{
++		if ( (48 <= c[i] && c[i] <= 57) ||//0-9
++		(65 <= c[i] && c[i] <= 90) ||//abc...xyz
++		(97 <= c[i] && c[i] <= 122) || //ABC...XYZ
++		(c[i]=='~' || c[i]=='!' || c[i]=='*' || c[i]=='(' || c[i]==')' || c[i]=='\'')
++		)
++		{
++			escaped.append( &c[i], 1);
++		}
++		else
++		{
++			escaped.append("%");
++			escaped.append( char2hex(c[i]) );//converts char 255 to string "ff"
++		}
++	}
++	return escaped;
++}
++
++Login::Login()
++{
++	selected = CSettings::get().GetSelected();
++	
++	if(selected == NULL || selected->username == NULL || selected->password == NULL )
++	{
++		ShowErrorMessage(STR_NC_NO_USER_OR_PASS, INVALID_STRING_ID, WL_ERROR);
++		delete this; // XXX is this safe in the contructor?
++		return;
++	}
++	switch(selected->login_method)
++	{
++		case TOKEN:
++		case TOKEN_MD5:
++		{
++			std::string username(selected->username);
++			std::string password(selected->password);
++			username = urlencode(username);
++			password = urlencode(password);
++			char addr[512];
++			seprintf(addr, lastof(addr), selected->login_url, username.c_str(), password.c_str());
++			new SimpleTxtDownloader(addr,this);
++		}break;
++		case PRV_TO_SRV:
++		{
++			char msg[512];
++			seprintf(msg, lastof(msg), selected->login_command , selected->username, selected->password);
++			NetworkClientSendChat(NETWORK_ACTION_CHAT_CLIENT, DESTTYPE_CLIENT, CLIENT_ID_SERVER , msg );
++		}
++	}
++}
++void Login::DataReceived(std::string token)
++{
++	if(selected != CSettings::get().GetSelected() || !(selected->login_method == TOKEN || selected->login_method == TOKEN_MD5))
++		return;
++	if(token.length() == 4) 
++	{
++		char b[16];
++		seprintf(b, lastof(b), selected->login_command, token.c_str());
++		NetworkClientSendChat(NETWORK_ACTION_CHAT_CLIENT, DESTTYPE_CLIENT, CLIENT_ID_SERVER , b);
++	}else 
++		ShowErrorMessage(STR_NC_OTHER_TOKEN_LOGIN_ERROR, INVALID_STRING_ID, WL_ERROR);
++		
++	delete this;
++}
++void Login::Failed()
++{
++	ShowErrorMessage(STR_NC_OTHER_TOKEN_LOGIN_ERROR, INVALID_STRING_ID, WL_ERROR);
++}
+diff -r 06f6b5dd055b src/nc_util.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_util.h	Sun Apr 05 14:45:11 2015 +0100
+@@ -0,0 +1,21 @@
++#ifndef NC_UTIL_H
++#define NC_UTIL_H
++
++#include "nc_receiver.h"
++#include "nc_csettings.h"
++class Community;
++
++class Login: public Receiver
++{
++	void DataReceived(std::string);
++	void Failed();
++	Community* selected;
++public:
++	Login();
++};
++class Observer
++{
++public:
++	virtual void notify() = 0;
++};
++#endif
 diff -r 06f6b5dd055b src/network/network.cpp
 --- a/src/network/network.cpp	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/network/network.cpp	Fri Apr 03 23:20:08 2015 +0100
++++ b/src/network/network.cpp	Sun Apr 05 14:45:11 2015 +0100
 @@ -37,6 +37,7 @@
  #include "../core/pool_func.hpp"
  #include "../gfx_func.h"
@@ -1151,8 +1291,16 @@ diff -r 06f6b5dd055b src/network/network.cpp
  
 diff -r 06f6b5dd055b src/network/network_gui.cpp
 --- a/src/network/network_gui.cpp	Fri Apr 03 12:23:11 2015 +0100
-+++ b/src/network/network_gui.cpp	Fri Apr 03 23:20:08 2015 +0100
-@@ -38,7 +38,7 @@
++++ b/src/network/network_gui.cpp	Sun Apr 05 14:45:11 2015 +0100
+@@ -31,6 +31,7 @@
+ #include "../core/geometry_func.hpp"
+ #include "../genworld.h"
+ #include "../map_type.h"
++#include "../error.h"
+ 
+ #include "../widgets/network_widget.h"
+ 
+@@ -38,7 +39,7 @@
  #include "../table/sprites.h"
  
  #include "../stringfilter_type.h"
@@ -1161,7 +1309,7 @@ diff -r 06f6b5dd055b src/network/network_gui.cpp
  #include "../safeguards.h"
  
  
-@@ -1691,6 +1691,46 @@
+@@ -1691,6 +1692,49 @@
  	NetworkServerKickOrBanIP(ci->client_id, true);
  }
  
@@ -1175,12 +1323,15 @@ diff -r 06f6b5dd055b src/network/network_gui.cpp
 +static void ClientList_Admin_Login(const NetworkClientInfo *ci)
 +{
 +	Community* selected = CSettings::get().GetSelected();
-+	if(selected != NULL)
++	if(selected != NULL && selected->admin != NULL && selected->adminpass)
 +	{
 +		
 +        std::string login_cmd = "!alogin " + std::string(selected->admin) + " " + std::string(selected->adminpass);
 +        NetworkClientSendChat(NETWORK_ACTION_CHAT_CLIENT, DESTTYPE_CLIENT, CLIENT_ID_SERVER, login_cmd.c_str());
-+    }
++    }else
++    {
++		ShowErrorMessage(STR_NC_NO_USER_OR_PASS, INVALID_STRING_ID, WL_ERROR);
++	}
 +}
 +
 +static void ClientList_Admin_Logout(const NetworkClientInfo *ci)
@@ -1208,7 +1359,7 @@ diff -r 06f6b5dd055b src/network/network_gui.cpp
  static void ClientList_GiveMoney(const NetworkClientInfo *ci)
  {
  	ShowNetworkGiveMoneyWindow(ci->client_playas);
-@@ -1766,7 +1806,16 @@
+@@ -1766,7 +1810,16 @@
  			this->AddAction(STR_NETWORK_CLIENTLIST_KICK, &ClientList_Kick);
  			this->AddAction(STR_NETWORK_CLIENTLIST_BAN, &ClientList_Ban);
  		}

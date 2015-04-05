@@ -1,5 +1,5 @@
 # HG changeset patch
-# Parent  eb61cc4d48b4c9b435b84536abd2c6095e42b210
+# Parent  cb423226ff4fd7c2491c8cc44bec2be9293d948d
 <<<<<<< local
 # Parent  29e0552d3ea4b59e6d29df6495487ca4768a61f1
 =======
@@ -8,9 +8,9 @@
 
 <<<<<<< local
 
-diff -r eb61cc4d48b4 source.list
---- a/source.list	Fri Apr 03 23:20:13 2015 +0100
-+++ b/source.list	Fri Apr 03 23:31:21 2015 +0100
+diff -r cb423226ff4f source.list
+--- a/source.list	Sun Apr 05 11:46:38 2015 +0100
++++ b/source.list	Sun Apr 05 13:20:28 2015 +0100
 @@ -56,6 +56,7 @@
  music.cpp
  nc_community_window.cpp
@@ -27,10 +27,18 @@ diff -r eb61cc4d48b4 source.list
  nc_receiver.h
  nc_util.h
  network/network.h
-diff -r eb61cc4d48b4 src/intro_gui.cpp
---- a/src/intro_gui.cpp	Fri Apr 03 23:20:13 2015 +0100
-+++ b/src/intro_gui.cpp	Fri Apr 03 23:31:21 2015 +0100
-@@ -31,14 +31,71 @@
+diff -r cb423226ff4f src/intro_gui.cpp
+--- a/src/intro_gui.cpp	Sun Apr 05 11:46:38 2015 +0100
++++ b/src/intro_gui.cpp	Sun Apr 05 13:20:28 2015 +0100
+@@ -10,6 +10,7 @@
+ /** @file intro_gui.cpp The main menu GUI. */
+ 
+ #include "nc_csettings.h"
++#include "nc_util.h"
+ 
+ #include "stdafx.h"
+ #include "error.h"
+@@ -31,14 +32,73 @@
  #include "highscore.h"
  
  #include "widgets/intro_widget.h"
@@ -48,16 +56,19 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
 +
  #include "safeguards.h"
  
+-struct SelectGameWindow : public Window {
 +////////////////////////XXX
 +void ShowSelectGameWindow();
 +////////////////////////XXX
-+void ReDraw()
+ 
++struct SelectGameWindow : public Window, public Observer 
 +{
-+	DeleteWindowByClass(WC_SELECT_GAME);
-+	ShowSelectGameWindow();	
-+}
- struct SelectGameWindow : public Window {
-+	
++	void notify()
++	{
++		//this->ReInit();
++		DeleteWindowByClass(WC_SELECT_GAME);
++		ShowSelectGameWindow();
++	}
 +	DropDownList *BuildDropDownList(int widget, int *selected_index) const
 +	{
 +		DropDownList *list = NULL;
@@ -97,16 +108,16 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
 +		}
 +		return list;
 +	}
- 
++
 +	SelectGameQuery query_widget;
  	SelectGameWindow(WindowDesc *desc) : Window(desc)
  	{
  		this->CreateNestedTree();
-@@ -64,6 +121,13 @@
+@@ -64,6 +124,13 @@
  	{
  		bool missing = _current_language->missing >= _settings_client.gui.missing_strings_threshold && !IsReleasedVersion();
  		this->GetWidget<NWidgetStacked>(WID_SGI_TRANSLATION_SELECTION)->SetDisplayedPlane(missing ? 0 : SZSP_NONE);
-+		CSettings::get().RegistToWait(&ReDraw);
++		CSettings::get().Regist(this);
 +	}
 +	
 +	virtual void OnPaint()
@@ -116,7 +127,7 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
  	}
  
  	virtual void DrawWidget(const Rect &r, int widget) const
-@@ -73,9 +137,46 @@
+@@ -73,9 +140,46 @@
  				SetDParam(0, _current_language->missing);
  				DrawStringMultiLine(r.left, r.right, r.top,  r.bottom, STR_INTRO_TRANSLATION, TC_FROMSTRING, SA_CENTER);
  				break;
@@ -164,7 +175,7 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
  	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
  	{
  		switch (widget) {
-@@ -95,7 +196,21 @@
+@@ -95,7 +199,23 @@
  			}
  		}
  	}
@@ -174,20 +185,22 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
 +		switch (widget) {
 +			case WID_NC_COMMUNITY_DROPDOWN:
 +				CSettings::get().SetSelected(index-1);
++				//this->ReInit();
 +				DeleteWindowByClass(WC_SELECT_GAME);
-+				ShowSelectGameWindow();	
++				ShowSelectGameWindow();
 +			break;
 +			case WID_NC_GROUP_DROPDOWN:
 +				CSettings::get().GetSelected()->SetGroup(index-1);
++				//this->ReInit();
 +				DeleteWindowByClass(WC_SELECT_GAME);
-+				ShowSelectGameWindow();	
++				ShowSelectGameWindow();
 +			break;
 +		}
 +	}
  	virtual void OnClick(Point pt, int widget, int click_count)
  	{
  #ifdef ENABLE_NETWORK
-@@ -103,7 +218,7 @@
+@@ -103,7 +223,7 @@
  		 * creation/load windows for the network server. */
  		if (IsInsideMM(widget, WID_SGI_GENERATE_GAME, WID_SGI_EDIT_SCENARIO + 1)) _is_network_server = false;
  #endif /* ENABLE_NETWORK */
@@ -196,7 +209,7 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
  		switch (widget) {
  			case WID_SGI_GENERATE_GAME:
  				if (_ctrl_pressed) {
-@@ -144,10 +259,154 @@
+@@ -144,10 +264,158 @@
  				break;
  			case WID_SGI_AI_SETTINGS:     ShowAIConfigWindow(); break;
  			case WID_SGI_EXIT:            HandleExitGameRequest(); break;
@@ -236,6 +249,10 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
 +			break;
  		}
  	}
++	virtual ~SelectGameWindow()
++	{
++		CSettings::get().UnRegist(this);
++	}
  };
 +NWidgetBase *MakeNCPart(int *biggest_index)
 +{
@@ -351,7 +368,7 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
  static const NWidgetPart _nested_select_game_widgets[] = {
  	NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_INTRO_CAPTION, STR_NULL),
  	NWidget(WWT_PANEL, COLOUR_BROWN),
-@@ -248,6 +507,7 @@
+@@ -248,6 +516,7 @@
  	NWidget(NWID_SPACER), SetMinimalSize(0, 8),
  
  	EndContainer(),
@@ -359,9 +376,9 @@ diff -r eb61cc4d48b4 src/intro_gui.cpp
  };
  
  static WindowDesc _select_game_desc(
-diff -r eb61cc4d48b4 src/lang/english.txt
---- a/src/lang/english.txt	Fri Apr 03 23:20:13 2015 +0100
-+++ b/src/lang/english.txt	Fri Apr 03 23:31:21 2015 +0100
+diff -r cb423226ff4f src/lang/english.txt
+--- a/src/lang/english.txt	Sun Apr 05 11:46:38 2015 +0100
++++ b/src/lang/english.txt	Sun Apr 05 13:20:28 2015 +0100
 @@ -5033,6 +5033,23 @@
  
  # Town gui extended
@@ -386,10 +403,10 @@ diff -r eb61cc4d48b4 src/lang/english.txt
  STR_NC_NO_USER_OR_PASS                                          :{WHITE}Username or password not defined...
  STR_NC_OTHER_TOKEN_LOGIN_ERROR                                  :{WHITE}Login failed, invalid token
  STR_NC_ADMIN_LOGIN                                              :{BLACK}Admin Login
-diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
+diff -r cb423226ff4f src/nc_intro_gui.cpp
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_intro_gui.cpp	Fri Apr 03 23:31:21 2015 +0100
-@@ -0,0 +1,387 @@
++++ b/src/nc_intro_gui.cpp	Sun Apr 05 13:20:28 2015 +0100
+@@ -0,0 +1,389 @@
 +#include "nc_intro_gui.h"
 +#include "nc_csettings.h"
 +#include "strings_func.h"
@@ -441,6 +458,16 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +		this->querystrings[WID_AM_PASSWORD_SET] = &this->pass_editbox;
 +		this->querystrings[WID_AM_AUSER_SET] = &this->aname_editbox;
 +		this->querystrings[WID_AM_APASSWORD_SET] = &this->apass_editbox;
++		Community* selected = CSettings::get().GetSelected();
++		if(selected == NULL)
++		{
++			NOT_REACHED();
++			return; /// XXX Can't be here
++		}
++		this->name_editbox.text.Assign(selected->username == NULL ? "" : selected->username);
++		this->pass_editbox.text.Assign(selected->password == NULL ? "" : "SAVED");
++		this->aname_editbox.text.Assign(selected->admin == NULL ? "" : selected->admin);
++		this->apass_editbox.text.Assign(selected->adminpass == NULL ? "" : "SAVED");
 +		this->InitNested(window_number);
 +		this->SetFocusedWidget(WID_AM_USER_SET);
 +	}
@@ -461,16 +488,12 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +				SetDParamStr(0,selected->display_name);
 +			break;
 +			case WID_AM_USER_SET:
-+				SetDParamStr(0,selected->username == NULL ? "" : selected->username);
 +			break;
 +			case WID_AM_PASSWORD_SET:
-+				SetDParamStr(0,selected->password == NULL ? "" : selected->password );
 +			break;
 +			case WID_AM_AUSER_SET:
-+				SetDParamStr(0,selected->admin == NULL ? "" : selected->admin);
 +			break;
 +			case WID_AM_APASSWORD_SET:
-+				SetDParamStr(0,selected->adminpass == NULL ? "" : selected->adminpass);
 +			break;
 +			case WID_AM_SAVE:
 +			break;
@@ -526,11 +549,11 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +		NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_REGULAR_USER,STR_NULL),
 +		NWidget(NWID_HORIZONTAL),SetPadding(0,0,0,20),
 +			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_USER,STR_NULL),
-+			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_USER_SET),SetDataTip(STR_BLACK_RAW_STRING,STR_NULL), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
++			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_USER_SET), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 +		EndContainer(),
 +		NWidget(NWID_HORIZONTAL),SetPadding(5,0,0,20),
 +			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_PASSWORD,STR_NULL),
-+			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_PASSWORD_SET), SetDataTip(STR_BLACK_RAW_STRING,STR_NULL),SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
++			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_PASSWORD_SET), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 +		EndContainer(),
 +	EndContainer(),
 +	NWidget(WWT_PANEL, COLOUR_GREY),SetFill(1,0),
@@ -538,11 +561,11 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +		NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_ADMIN_USER,STR_NULL),
 +		NWidget(NWID_HORIZONTAL),SetPadding(0,0,0,20),
 +			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_USER,STR_NULL),
-+			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_AUSER_SET), SetDataTip(STR_BLACK_RAW_STRING,STR_NULL), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
++			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_AUSER_SET), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 +		EndContainer(),
 +		NWidget(NWID_HORIZONTAL),SetPadding(5,0,0,20),
 +			NWidget(WWT_TEXT,COLOUR_ORANGE),SetDataTip(STR_NC_PASSWORD,STR_NULL),
-+			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_APASSWORD_SET),SetDataTip(STR_BLACK_RAW_STRING,STR_NULL), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
++			NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AM_APASSWORD_SET), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 +		EndContainer(),
 +		NWidget(WWT_TEXTBTN,COLOUR_BROWN,WID_AM_SAVE),SetDataTip(STR_SAVE_PRESET_SAVE,STR_NULL),SetPadding(5),
 +	EndContainer(),
@@ -726,15 +749,13 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +};
 +class AddCommunityGui : public Window
 +{
-+	QueryString name_editbox; ///< Message editbox.
 +	QueryString link_editbox;    ///< Editbox.
 +	public:
-+	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), name_editbox(50),link_editbox(200) 
++	AddCommunityGui(WindowDesc *desc, int window_number) : Window(desc), link_editbox(200) 
 +	{
-+		this->querystrings[WID_AC_NAME] = &this->name_editbox;
 +		this->querystrings[WID_AC_LINK] = &this->link_editbox;
 +		this->InitNested(window_number);
-+		this->SetFocusedWidget(WID_AC_NAME);
++		this->SetFocusedWidget(WID_AC_LINK);
 +	}
 +	virtual void DrawWidget(const Rect &r, int widget) const
 +	{
@@ -744,7 +765,7 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +		switch(widget)
 +		{
 +			case WID_AC_CONFIRM:
-+				CSettings::get().AddCommunity(name_editbox.GetText(),link_editbox.GetText());
++				CSettings::get().AddCommunity("Undefined",link_editbox.GetText());
 +			break;
 +		}
 +	}
@@ -759,8 +780,6 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +	EndContainer(),
 +	NWidget(WWT_PANEL, COLOUR_WHITE),
 +	NWidget(NWID_VERTICAL),SetPadding(7),
-+		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_COMMUNITY,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
-+		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_NAME), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 +		NWidget(WWT_TEXT,COLOUR_BEGIN),SetDataTip(STR_NC_LINK,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
 +		NWidget(WWT_EDITBOX, COLOUR_GREY, WID_AC_LINK), SetMinimalSize(256, 12), SetFill(1, 1), SetPadding(2, 2, 2, 2),
 +		NWidget(WWT_TEXTBTN,COLOUR_ORANGE,WID_AC_CONFIRM),SetDataTip(STR_NC_CONFIRM,STR_NULL),SetPadding(5),SetMinimalSize(0,20),
@@ -777,9 +796,9 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.cpp
 +{
 +	AllocateWindowDescFront<AddCommunityGui>(&_add_comm_desc, 0);
 +} 
-diff -r eb61cc4d48b4 src/nc_intro_gui.h
+diff -r cb423226ff4f src/nc_intro_gui.h
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/src/nc_intro_gui.h	Fri Apr 03 23:31:21 2015 +0100
++++ b/src/nc_intro_gui.h	Sun Apr 05 13:20:28 2015 +0100
 @@ -0,0 +1,9 @@
 +#ifndef COMC_INTRO_GUI_H
 +#define COMC_INTRO_GUI_H
@@ -790,9 +809,9 @@ diff -r eb61cc4d48b4 src/nc_intro_gui.h
 +void ShowAddCommunity(); 
 +
 +#endif
-diff -r eb61cc4d48b4 src/widgets/intro_widget.h
---- a/src/widgets/intro_widget.h	Fri Apr 03 23:20:13 2015 +0100
-+++ b/src/widgets/intro_widget.h	Fri Apr 03 23:31:21 2015 +0100
+diff -r cb423226ff4f src/widgets/intro_widget.h
+--- a/src/widgets/intro_widget.h	Sun Apr 05 11:46:38 2015 +0100
++++ b/src/widgets/intro_widget.h	Sun Apr 05 13:20:28 2015 +0100
 @@ -33,6 +33,25 @@
  	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
  	WID_SGI_AI_SETTINGS,           ///< AI button.
@@ -819,9 +838,9 @@ diff -r eb61cc4d48b4 src/widgets/intro_widget.h
  
 +
  #endif /* WIDGETS_INTRO_WIDGET_H */
-diff -r eb61cc4d48b4 src/window_type.h
---- a/src/window_type.h	Fri Apr 03 23:20:13 2015 +0100
-+++ b/src/window_type.h	Fri Apr 03 23:31:21 2015 +0100
+diff -r cb423226ff4f src/window_type.h
+--- a/src/window_type.h	Sun Apr 05 11:46:38 2015 +0100
++++ b/src/window_type.h	Sun Apr 05 13:20:28 2015 +0100
 @@ -684,6 +684,18 @@
  	WC_SAVE_PRESET,
  	

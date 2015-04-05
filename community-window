@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent  6e0edf63803d44fe8706284cb284bda527c5b6ec
+# Parent  5a76d57f77c90ee8a972e7f761daa28bf967f607
 
-diff -r 6e0edf63803d source.list
---- a/source.list	Fri Apr 03 23:20:08 2015 +0100
-+++ b/source.list	Sat Apr 04 00:04:01 2015 +0100
+diff -r 5a76d57f77c9 source.list
+--- a/source.list	Sun Apr 05 10:46:38 2015 +0100
++++ b/source.list	Sun Apr 05 10:51:16 2015 +0100
 @@ -54,6 +54,7 @@
  misc.cpp
  mixer.cpp
@@ -20,16 +20,14 @@ diff -r 6e0edf63803d source.list
  nc_csettings.h
  nc_receiver.h
  nc_util.h
-diff -r 6e0edf63803d src/lang/english.txt
---- a/src/lang/english.txt	Fri Apr 03 23:20:08 2015 +0100
-+++ b/src/lang/english.txt	Sat Apr 04 00:04:01 2015 +0100
-@@ -5004,7 +5004,8 @@
- STR_TTE_STATION                                                 :{WHITE}{STRING}  {BLACK}{CARGO_SHORT} {YELLOW}{NUM} %
+diff -r 5a76d57f77c9 src/lang/english.txt
+--- a/src/lang/english.txt	Sun Apr 05 10:46:38 2015 +0100
++++ b/src/lang/english.txt	Sun Apr 05 10:51:16 2015 +0100
+@@ -5005,6 +5005,7 @@
  
  # Patches Menu
--STR_WATCH_WINDOW                                                :Watch Company
-+STR_WATCH_WINDOW                                                :{BLACK}Watch Company
-+STR_COMMUNITY_WINDOW                                            :{BLACK}Community Window
+ STR_WATCH_WINDOW                                                :Watch Company
++STR_COMMUNITY_WINDOW                                            :Community Window
  
  # watch window
  STR_WATCH_WINDOW_TITLE                                          :{WHITE}Watching {RAW_STRING}.
@@ -43,9 +41,129 @@ diff -r 6e0edf63803d src/lang/english.txt
 +STR_NC_TOKEN_ENJOY                                              :{BLACK}  Respect the rules and enjoy the game. :)
 +STR_NC_TOKEN_LOGIN                                              :{LTBLUE}Get Token --> Login
 +STR_NC_TOKEN_LOGIN_TOOLTIP                                      :{BLACK}Get Token from website and executes !login XXXX
-diff -r 6e0edf63803d src/toolbar_gui.cpp
---- a/src/toolbar_gui.cpp	Fri Apr 03 23:20:08 2015 +0100
-+++ b/src/toolbar_gui.cpp	Sat Apr 04 00:04:01 2015 +0100
+diff -r 5a76d57f77c9 src/nc_community_window.cpp
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_community_window.cpp	Sun Apr 05 10:51:16 2015 +0100
+@@ -0,0 +1,104 @@
++/* $Id: commands_token_gui.cpp	23663 2011-12-23 18:01:50	me $ */
++
++#include "stdafx.h"
++#include "widget_type.h"
++#include "window_func.h"
++#include "strings_func.h"
++#include "nc_community_window.h"
++#include "network/network.h"
++#include "network/network_func.h"
++#include "network/network_base.h"
++#include "network/network_type.h"
++#include "table/strings.h"
++#include "console_func.h"
++#include "error.h"
++#include "window_gui.h"
++#include "window_func.h"
++#include "company_base.h"
++#include "nc_csettings.h"
++#include "nc_util.h"
++
++enum CommunityWindowWidgets {
++	NIC_TOKEN_USER,
++	NIC_TOKEN_LOGIN,
++	NIC_TOKEN_COMMUNITY,
++};
++
++class CommunityWindowGui : public Window
++{
++	public:
++	CommunityWindowGui(WindowDesc *desc, int window_number) : Window(desc)
++	{
++		this->InitNested(window_number);
++	}
++
++	virtual void OnPaint()
++	{
++		this->DrawWidgets();
++	}
++
++	virtual void SetStringParameters(int widget) const
++	{
++		switch(widget)
++		{
++			case NIC_TOKEN_USER:
++				SetDParamStr(0, CSettings::get().GetSelected() == NULL ? "" : CSettings::get().GetSelected()->username);
++			break;
++			case NIC_TOKEN_COMMUNITY:
++				SetDParamStr(0, CSettings::get().GetSelectedName());
++			break;
++			default:
++				
++			break;
++		}
++
++	}
++
++	virtual void OnClick(Point pt, int widget, int click_count)
++	{
++		extern void OpenBrowser(const char *url);
++		switch (widget) 
++		{
++			case NIC_TOKEN_LOGIN:
++				if (_networking)
++					new Login();
++					DeleteWindowByClass(WC_NC_COMM_WINDOW);
++				break;
++		}
++	}
++};
++
++static const NWidgetPart _nested_community_window_widgets[] = {
++	/* Title Bar with close box, title, shade and stick boxes */
++	NWidget(NWID_HORIZONTAL),
++		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
++		NWidget(WWT_CAPTION, COLOUR_GREY), SetDataTip(STR_NC_COMMUNITY_WINDOW, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
++		NWidget(WWT_SHADEBOX, COLOUR_GREY),
++		NWidget(WWT_STICKYBOX, COLOUR_GREY),
++	EndContainer(),
++	NWidget(WWT_PANEL, COLOUR_GREY), SetFill(0, 1), SetPIP(2, 2, 2),
++		NWidget(NWID_VERTICAL), SetPadding(0, 5, 0, 5),
++			NWidget(WWT_TEXT, COLOUR_BROWN, NIC_TOKEN_USER), SetDataTip(STR_NC_TOKEN_WELCOME, STR_NULL), SetMinimalSize(110, 16),
++			NWidget(WWT_TEXT, COLOUR_BROWN), SetDataTip(STR_NC_TOKEN_CLICK_ME, STR_NULL), SetMinimalSize(110, 16),
++			NWidget(NWID_HORIZONTAL), SetPIP(2, 2, 2),
++				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, NIC_TOKEN_LOGIN), SetMinimalSize(105, 40),SetFill(1, 0), SetDataTip(STR_NC_TOKEN_LOGIN, STR_NC_TOKEN_LOGIN_TOOLTIP),
++			EndContainer(),
++			NWidget(WWT_TEXT, COLOUR_BROWN), SetDataTip(STR_NC_TOKEN_ENJOY, STR_NULL), SetMinimalSize(110, 16),
++			NWidget(WWT_TEXT, COLOUR_BROWN, NIC_TOKEN_COMMUNITY), SetDataTip(STR_BLACK_RAW_STRING, STR_NULL), SetMinimalSize(110, 16),
++		EndContainer(),
++		NWidget(NWID_SPACER), SetMinimalSize(2, 2), SetFill(0, 1),
++	EndContainer(),
++};
++
++static WindowDesc _community_window_desc(
++	WDP_CENTER,"community_window", 0, 0,
++	WC_NC_COMM_WINDOW, WC_NONE,
++	0,
++	_nested_community_window_widgets, lengthof(_nested_community_window_widgets)
++);
++
++void ShowCommunityWindow()
++{	
++	if(CSettings::get().GetSelected()->HasLoginCredentials())
++		AllocateWindowDescFront<CommunityWindowGui>(&_community_window_desc, 0);
++}
+diff -r 5a76d57f77c9 src/nc_community_window.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/nc_community_window.h	Sun Apr 05 10:51:16 2015 +0100
+@@ -0,0 +1,8 @@
++/* $Id: commands_token_gui.h $ */
++
++#ifndef NC_COMMUNITY_WINDOW_H
++#define NC_COMMUNITY_WINDOW_H
++
++void ShowCommunityWindow();
++
++#endif
+diff -r 5a76d57f77c9 src/toolbar_gui.cpp
+--- a/src/toolbar_gui.cpp	Sun Apr 05 10:46:38 2015 +0100
++++ b/src/toolbar_gui.cpp	Sun Apr 05 10:51:16 2015 +0100
 @@ -56,6 +56,9 @@
  
  #include "watch_gui.h"
@@ -111,9 +229,9 @@ diff -r 6e0edf63803d src/toolbar_gui.cpp
 +#endif /* ENABLE_NETWORK */
  	}
  }
-diff -r 6e0edf63803d src/window_type.h
---- a/src/window_type.h	Fri Apr 03 23:20:08 2015 +0100
-+++ b/src/window_type.h	Sat Apr 04 00:04:01 2015 +0100
+diff -r 5a76d57f77c9 src/window_type.h
+--- a/src/window_type.h	Sun Apr 05 10:46:38 2015 +0100
++++ b/src/window_type.h	Sun Apr 05 10:51:16 2015 +0100
 @@ -682,6 +682,8 @@
  	 *   - 0 = #SavePresetWidgets
  	 */
