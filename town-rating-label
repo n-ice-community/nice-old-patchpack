@@ -1,6 +1,10 @@
-diff -r 10bde8eda15d src/company_cmd.cpp
---- a/src/company_cmd.cpp	Sat Jan 03 15:58:43 2015 +0000
-+++ b/src/company_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
+# HG changeset patch
+# Parent  2bd2ad4f91bcafba1ecf31bf58a2e635113ca9b9
+imported patch town-rating-label
+
+diff -r 2bd2ad4f91bc src/company_cmd.cpp
+--- a/src/company_cmd.cpp	Tue Jun 09 15:28:17 2015 +0100
++++ b/src/company_cmd.cpp	Tue Jun 09 15:29:59 2015 +0100
 @@ -577,7 +577,9 @@
  
  	AI::BroadcastNewEvent(new ScriptEventCompanyNew(c->index), c->index);
@@ -12,9 +16,9 @@ diff -r 10bde8eda15d src/company_cmd.cpp
  	return c;
  }
  
-diff -r 10bde8eda15d src/lang/english.txt
---- a/src/lang/english.txt	Sat Jan 03 15:58:43 2015 +0000
-+++ b/src/lang/english.txt	Sat Jan 03 15:58:48 2015 +0000
+diff -r 2bd2ad4f91bc src/lang/english.txt
+--- a/src/lang/english.txt	Tue Jun 09 15:28:17 2015 +0100
++++ b/src/lang/english.txt	Tue Jun 09 15:29:59 2015 +0100
 @@ -1287,7 +1287,7 @@
  STR_CONFIG_SETTING_HOVER_DELAY_HELPTEXT                         :Delay before tooltips are displayed when hovering the mouse over some interface element. Alternatively tooltips are bound to the right mouse button when this value is set to 0.
  STR_CONFIG_SETTING_HOVER_DELAY_VALUE                            :Hover for {COMMA} millisecond{P 0 "" s}
@@ -24,7 +28,7 @@ diff -r 10bde8eda15d src/lang/english.txt
  STR_CONFIG_SETTING_POPULATION_IN_LABEL_HELPTEXT                 :Display the population of towns in their label on the map
  STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS                         :Thickness of lines in graphs: {STRING2}
  STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS_HELPTEXT                :Width of the line in the graphs. A thin line is more precisely readable, a thicker line is easier to see and colours are easier to distinguish
-@@ -4880,10 +4880,18 @@
+@@ -4883,10 +4883,18 @@
  STR_SAVEGAME_NAME_SPECTATOR                                     :Spectator, {1:STRING1}
  
  # Viewport strings
@@ -43,9 +47,9 @@ diff -r 10bde8eda15d src/lang/english.txt
  
  STR_VIEWPORT_SIGN_SMALL_BLACK                                   :{TINY_FONT}{BLACK}{SIGN}
  STR_VIEWPORT_SIGN_SMALL_WHITE                                   :{TINY_FONT}{WHITE}{SIGN}
-diff -r 10bde8eda15d src/town.h
---- a/src/town.h	Sat Jan 03 15:58:43 2015 +0000
-+++ b/src/town.h	Sat Jan 03 15:58:48 2015 +0000
+diff -r 2bd2ad4f91bc src/town.h
+--- a/src/town.h	Tue Jun 09 15:28:17 2015 +0100
++++ b/src/town.h	Tue Jun 09 15:29:59 2015 +0100
 @@ -15,6 +15,9 @@
  #include "viewport_type.h"
  #include "town_map.h"
@@ -96,9 +100,9 @@ diff -r 10bde8eda15d src/town.h
  	/**
  	 * Calculate the max town noise.
  	 * The value is counted using the population divided by the content of the
-diff -r 10bde8eda15d src/town_cmd.cpp
---- a/src/town_cmd.cpp	Sat Jan 03 15:58:43 2015 +0000
-+++ b/src/town_cmd.cpp	Sat Jan 03 15:58:48 2015 +0000
+diff -r 2bd2ad4f91bc src/town_cmd.cpp
+--- a/src/town_cmd.cpp	Tue Jun 09 15:28:17 2015 +0100
++++ b/src/town_cmd.cpp	Tue Jun 09 15:29:59 2015 +0100
 @@ -137,6 +137,26 @@
  
  	this->layout = TileHash(TileX(this->xy), TileY(this->xy)) % (NUM_TLS - 1);
@@ -126,21 +130,22 @@ diff -r 10bde8eda15d src/town_cmd.cpp
  
  /**
   * Return a random valid town.
-@@ -373,11 +393,11 @@
+@@ -373,12 +393,11 @@
   */
  void Town::UpdateVirtCoord()
  {
-+	this->UpdateLabel();
++        this->UpdateLabel();
  	Point pt = RemapCoords2(TileX(this->xy) * TILE_SIZE, TileY(this->xy) * TILE_SIZE);
  	SetDParam(0, this->index);
  	SetDParam(1, this->cache.population);
 -	this->cache.sign.UpdatePosition(pt.x, pt.y - 24 * ZOOM_LVL_BASE,
--		_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN);
+-		_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_VIEWPORT_TOWN,
+-		STR_VIEWPORT_TOWN);
 +	this->cache.sign.UpdatePosition(pt.x, pt.y - 24 * ZOOM_LVL_BASE, this->Label());
  
  	SetWindowDirty(WC_TOWN_VIEW, this->index);
  }
-@@ -2913,6 +2933,7 @@
+@@ -2960,6 +2979,7 @@
  			 */
  			if (t->ratings[_current_company] > RATING_BRIBE_DOWN_TO) {
  				t->ratings[_current_company] = RATING_BRIBE_DOWN_TO;
@@ -148,7 +153,7 @@ diff -r 10bde8eda15d src/town_cmd.cpp
  				SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
  			}
  		} else {
-@@ -3044,7 +3065,7 @@
+@@ -3091,7 +3111,7 @@
  	for (uint i = 0; i < MAX_COMPANIES; i++) {
  		t->ratings[i] = Clamp(t->ratings[i], RATING_MINIMUM, RATING_MAXIMUM);
  	}
@@ -157,7 +162,7 @@ diff -r 10bde8eda15d src/town_cmd.cpp
  	SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
  }
  
-@@ -3296,6 +3317,7 @@
+@@ -3343,6 +3363,7 @@
  	} else {
  		SetBit(t->have_ratings, _current_company);
  		t->ratings[_current_company] = rating;
@@ -165,10 +170,10 @@ diff -r 10bde8eda15d src/town_cmd.cpp
  		SetWindowDirty(WC_TOWN_AUTHORITY, t->index);
  	}
  }
-diff -r 10bde8eda15d src/viewport.cpp
---- a/src/viewport.cpp	Sat Jan 03 15:58:43 2015 +0000
-+++ b/src/viewport.cpp	Sat Jan 03 15:58:48 2015 +0000
-@@ -1587,8 +1587,7 @@
+diff -r 2bd2ad4f91bc src/viewport.cpp
+--- a/src/viewport.cpp	Tue Jun 09 15:28:17 2015 +0100
++++ b/src/viewport.cpp	Tue Jun 09 15:29:59 2015 +0100
+@@ -1255,8 +1255,7 @@
  	const Town *t;
  	FOR_ALL_TOWNS(t) {
  		ViewportAddString(dpi, ZOOM_LVL_OUT_16X, &t->cache.sign,

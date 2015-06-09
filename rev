@@ -1,14 +1,15 @@
 # HG changeset patch
-# Parent  52c3535b6df977c327d9cb49b328da8bc3f666a0
+# Parent  bfc3a31fe0d4b35c337576f907797648490a742d
+imported patch rev
 
-diff -r 52c3535b6df9 .hgtags
+diff -r bfc3a31fe0d4 .hgtags
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/.hgtags	Sun Apr 05 14:48:27 2015 +0100
++++ b/.hgtags	Tue Jun 09 15:32:29 2015 +0100
 @@ -0,0 +1,1 @@
 +5dac82e6fed8c3522692ba2924c36e004ef6b11e 1.5.0
-diff -r 52c3535b6df9 src/rev.cpp.in
---- a/src/rev.cpp.in	Sun Apr 05 14:45:13 2015 +0100
-+++ b/src/rev.cpp.in	Sun Apr 05 14:48:27 2015 +0100
+diff -r bfc3a31fe0d4 src/rev.cpp.in
+--- a/src/rev.cpp.in	Tue Jun 09 15:30:46 2015 +0100
++++ b/src/rev.cpp.in	Tue Jun 09 15:32:29 2015 +0100
 @@ -39,7 +39,7 @@
   * norev000 is for non-releases that are made on systems without
   * subversion or sources that are not a checkout of subversion.
@@ -31,8 +32,8 @@ diff -r 52c3535b6df9 src/rev.cpp.in
   * final release will always have a lower version number than the released
   * version, thus making comparisons on specific revisions easy.
   */
--const uint32 _openttd_newgrf_version = 1 << 28 | 6 << 24 | 0 << 20 | 0 << 19 | (!!REVISION!! & ((1 << 19) - 1));
-+const uint32 _openttd_newgrf_version = 1 << 28 | 5 << 24 | 0 << 20 | 1 << 19 | (27217 & ((1 << 19) - 1));
+-const uint32 _openttd_newgrf_version = 1 << 28 | 5 << 24 | 1 << 20 | 1 << 19 | (!!REVISION!! & ((1 << 19) - 1));
++const uint32 _openttd_newgrf_version = 1 << 28 | 5 << 24 | 1 << 20 | 1 << 19 | (27298 & ((1 << 19) - 1));
  
  #ifdef __MORPHOS__
  /**

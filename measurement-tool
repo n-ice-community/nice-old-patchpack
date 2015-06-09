@@ -1,6 +1,10 @@
-diff -r 3a4da8ae90df src/lang/english.txt
---- a/src/lang/english.txt	Sat Jan 03 15:58:51 2015 +0000
-+++ b/src/lang/english.txt	Sat Jan 03 15:58:59 2015 +0000
+# HG changeset patch
+# Parent  ae0eee82950aee48a21d1937a817a6582ef99599
+imported patch measurement-tool
+
+diff -r ae0eee82950a src/lang/english.txt
+--- a/src/lang/english.txt	Tue Jun 09 15:30:00 2015 +0100
++++ b/src/lang/english.txt	Tue Jun 09 15:30:23 2015 +0100
 @@ -274,6 +274,7 @@
  STR_MEASURE_AREA                                                :{BLACK}Area: {NUM} x {NUM}
  STR_MEASURE_LENGTH_HEIGHTDIFF                                   :{BLACK}Length: {NUM}{}Height difference: {HEIGHT}
@@ -17,9 +21,9 @@ diff -r 3a4da8ae90df src/lang/english.txt
  
  # Object construction window
  STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Object Selection
-diff -r 3a4da8ae90df src/lang/russian.txt
---- a/src/lang/russian.txt	Sat Jan 03 15:58:51 2015 +0000
-+++ b/src/lang/russian.txt	Sat Jan 03 15:58:59 2015 +0000
+diff -r ae0eee82950a src/lang/russian.txt
+--- a/src/lang/russian.txt	Tue Jun 09 15:30:00 2015 +0100
++++ b/src/lang/russian.txt	Tue Jun 09 15:30:23 2015 +0100
 @@ -399,6 +399,7 @@
  STR_MEASURE_AREA                                                :{BLACK}Площадь: {NUM} x {NUM}
  STR_MEASURE_LENGTH_HEIGHTDIFF                                   :{BLACK}Длина: {NUM}{}Разница высот: {HEIGHT}
@@ -36,9 +40,9 @@ diff -r 3a4da8ae90df src/lang/russian.txt
  
  # Object construction window
  STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Выбор объекта
-diff -r 3a4da8ae90df src/terraform_gui.cpp
---- a/src/terraform_gui.cpp	Sat Jan 03 15:58:51 2015 +0000
-+++ b/src/terraform_gui.cpp	Sat Jan 03 15:58:59 2015 +0000
+diff -r ae0eee82950a src/terraform_gui.cpp
+--- a/src/terraform_gui.cpp	Tue Jun 09 15:30:00 2015 +0100
++++ b/src/terraform_gui.cpp	Tue Jun 09 15:30:23 2015 +0100
 @@ -147,6 +147,11 @@
  	VpStartPlaceSizing(tile, VPM_X_AND_Y, DDSP_DEMOLISH_AREA);
  }
@@ -101,10 +105,10 @@ diff -r 3a4da8ae90df src/terraform_gui.cpp
  		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_TT_PLACE_SIGN), SetMinimalSize(22, 22),
  								SetFill(0, 1), SetDataTip(SPR_IMG_SIGN, STR_SCENEDIT_TOOLBAR_PLACE_SIGN),
  		NWidget(NWID_SELECTION, INVALID_COLOUR, WID_TT_SHOW_PLACE_OBJECT),
-diff -r 3a4da8ae90df src/viewport.cpp
---- a/src/viewport.cpp	Sat Jan 03 15:58:51 2015 +0000
-+++ b/src/viewport.cpp	Sat Jan 03 15:58:59 2015 +0000
-@@ -3345,6 +3345,45 @@
+diff -r ae0eee82950a src/viewport.cpp
+--- a/src/viewport.cpp	Tue Jun 09 15:30:00 2015 +0100
++++ b/src/viewport.cpp	Tue Jun 09 15:30:23 2015 +0100
+@@ -3023,6 +3023,45 @@
  			}
  			break;
  
@@ -150,18 +154,18 @@ diff -r 3a4da8ae90df src/viewport.cpp
  		case VPM_X_AND_Y_LIMITED: // Drag an X by Y constrained rect area.
  			limit = (_thd.sizelimit - 1) * TILE_SIZE;
  			x = sx + Clamp(x - sx, -limit, limit);
-diff -r 3a4da8ae90df src/viewport_type.h
---- a/src/viewport_type.h	Sat Jan 03 15:58:51 2015 +0000
-+++ b/src/viewport_type.h	Sat Jan 03 15:58:59 2015 +0000
-@@ -14,6 +14,7 @@
- 
+diff -r ae0eee82950a src/viewport_type.h
+--- a/src/viewport_type.h	Tue Jun 09 15:30:00 2015 +0100
++++ b/src/viewport_type.h	Tue Jun 09 15:30:23 2015 +0100
+@@ -15,6 +15,7 @@
  #include "zoom_type.h"
  #include "strings_type.h"
+ #include "table/strings.h"
 +#include "math.h"
  
  class LinkGraphOverlay;
  
-@@ -84,6 +85,7 @@
+@@ -85,6 +86,7 @@
  	VPM_FIX_VERTICAL    =    6, ///< drag only in vertical direction
  	VPM_X_LIMITED       =    7, ///< Drag only in X axis with limited size
  	VPM_Y_LIMITED       =    8, ///< Drag only in Y axis with limited size
@@ -169,7 +173,7 @@ diff -r 3a4da8ae90df src/viewport_type.h
  	VPM_RAILDIRS        = 0x40, ///< all rail directions
  	VPM_SIGNALDIRS      = 0x80, ///< similar to VMP_RAILDIRS, but with different cursor
  };
-@@ -104,6 +106,7 @@
+@@ -105,6 +107,7 @@
  	DDSP_CREATE_RIVER,         ///< Create rivers
  	DDSP_PLANT_TREES,          ///< Plant trees
  	DDSP_BUILD_BRIDGE,         ///< Bridge placement
@@ -177,9 +181,9 @@ diff -r 3a4da8ae90df src/viewport_type.h
  
  	/* Rail specific actions */
  	DDSP_PLACE_RAIL,           ///< Rail placement
-diff -r 3a4da8ae90df src/widgets/terraform_widget.h
---- a/src/widgets/terraform_widget.h	Sat Jan 03 15:58:51 2015 +0000
-+++ b/src/widgets/terraform_widget.h	Sat Jan 03 15:58:59 2015 +0000
+diff -r ae0eee82950a src/widgets/terraform_widget.h
+--- a/src/widgets/terraform_widget.h	Tue Jun 09 15:30:00 2015 +0100
++++ b/src/widgets/terraform_widget.h	Tue Jun 09 15:30:23 2015 +0100
 @@ -22,6 +22,7 @@
  	WID_TT_DEMOLISH,                          ///< Demolish aka dynamite button.
  	WID_TT_BUY_LAND,                          ///< Buy land button.
