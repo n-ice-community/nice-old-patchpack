@@ -15,7 +15,7 @@ diff -r bfc3a31fe0d4 src/rev.cpp.in
   * subversion or sources that are not a checkout of subversion.
   */
 -const char _openttd_revision[] = "!!VERSION!!";
-+const char _openttd_revision[] = "1.5.0";
++const char _openttd_revision[] = "1.5.1";
  
  /**
   * The text version of OpenTTD's build date.
